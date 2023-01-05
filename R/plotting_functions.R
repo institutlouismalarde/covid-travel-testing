@@ -544,7 +544,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
   shift_s <- 17 # number of days to seroconvert
 
-  y_cinc <- cumul_CI(out_fr1r$sim_out*scale_depart_fr1)
+  y_cinc <- cumul_CI(out_fr1r$sim_inc*scale_depart_fr1,cumulative=T)
   x_date_p <- out_fr1r$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
   
   # Match to seroprevalence timings
@@ -593,7 +593,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   
   # - - -
   # Match to US seroprevalence data 1
-  y_cinc <- cumul_CI(out_us1r$sim_out*scale_depart_us1)
+  y_cinc <- cumul_CI(out_us1r$sim_inc*scale_depart_us1)
   x_date_p <- out_us1r$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
 
   d1 <- which.min(abs(x_date_p - as.Date("2020-07-15")))
@@ -602,7 +602,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   sero1 <- 3.5; sero2 <- 20.2
   
   # Match to US seroprevalence data 2
-  y_cinc2 <- cumul_CI(out_us2r_only$sim_out*scale_depart_us2)
+  y_cinc2 <- cumul_CI(out_us2r_only$sim_inc*scale_depart_us2)
   x_date_p2 <- out_us2r_only$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
 
   d1a <- which.min(abs(x_date_p2 - as.Date("2021-12-15")))
@@ -731,7 +731,7 @@ figure_explore_cumulative_incidence <- function(){
   plot(data_infections,yaxs="i",ylab="daily incidence (%)",ylim=c(0,0.35),xlab="days")
   
   inc1 <- estimate_incidence(data_prev)
-  inc2 <- prev_to_inc(data_prev) %>% tail(.,-9)
+  inc2 <- prev_to_inc(data_prev,weekly_adjust=1) %>% tail(.,-9)
   lines(inc1,col="blue",lwd=2)
   lines(inc2,col="red",lwd=2)
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1

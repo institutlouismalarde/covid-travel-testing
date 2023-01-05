@@ -31,12 +31,28 @@ c.text<-function(x1,x2,x3,sigF=2){
 
 # Calculate CI for cumulative incidence --------------------------------------------------
 
-cumul_CI <- function(sims) {
+cumul_CI <- function(sims,cumulative=T) {
   
-  sim_95 <- apply(sims,1,function(x){quantile(x,c(0.025,0.5,0.975))})
-  sim_cumul <- apply(sim_95,1,cumsum)
+  # Cumulative sums
+  if(cumulative==T){
+    sim_cumul <- apply(sims,2,cumsum)
+  }else{
+    sim_cumul <- sims
+  }
   
-  cumul_out <- data.frame(lower=sim_cumul[,1],median=sim_cumul[,2],upper=sim_cumul[,3])
+  # Calculate 95% interval
+  sim_95 <- apply(sim_cumul,1,function(x){quantile(x,c(0.025,0.5,0.975))}) %>% t()
+  
+  # sim_95 <- apply(sims,1,function(x){quantile(x,c(0.025,0.5,0.975))})
+  # 
+  # # Cumulative sums
+  # if(cumulative==T){
+  #   sim_cumul <- apply(sim_95,1,cumsum)
+  # }else{
+  #   sim_cumul <- apply(sim_95,1,cumsum)
+  # }
+  
+  cumul_out <- data.frame(lower=sim_95[,1],median=sim_95[,2],upper=sim_95[,3])
   cumul_out
   
 }
@@ -95,14 +111,15 @@ plot_GAM <- function(dates,x_val,n_val=NULL,return_vals=T,kk=NULL,family_f="bino
   
   # Simulate incidence from GAM prevalence estimates
   sims <- simulate(model1, nsim = 1e3, seed = 42) 
-  sims_inc <- apply(sims,1,prev_to_inc)
+  sims_inc <- apply(sims,1,prev_to_inc) %>% t()
   
   
   if(return_vals==T){
     list(pred_date=x_date2,pred_med=100*fitPlotF,
          pred_CI1=mult_v*CI1plotF,pred_CI2=mult_v*CI2plotF,
          sim_date = as.Date(x_date),
-         sim_out = mult_v*sims)
+         sim_out = mult_v*sims,
+         sim_inc = mult_v*sims_inc)
   }
 
 }
@@ -339,7 +356,7 @@ estimate_vals <- function(n_detect,
 
 # Convert prevalence to incidence using weekly values -----------------------------------------
 
-prev_to_inc <- function(x,d_growth=0){
+prev_to_inc <- function(x,d_growth=0,weekly_adjust=7){
   
   # Define maximum PCR positivity considered
   max_d <- 31
@@ -349,7 +366,8 @@ prev_to_inc <- function(x,d_growth=0){
   pcr_density <- sum(p_by_day$median) # Duration of positivity
   
   # Estimate incidence (note need to then shift so that incidence estimates are mean_pcr ahead of prevalence)
-  x/pcr_density
+  # And scale to weekly value
+  weekly_adjust*x/pcr_density
 
 }
 

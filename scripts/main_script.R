@@ -15,6 +15,9 @@ library(DescTools)
 library(gratia)
 library(MASS)
 
+# Set working directory
+# setwd("~/Documents/GitHub/covid-travel-testing/")
+
 # Load and clean data and functions
 source("R/data_load.R")
 
