@@ -531,7 +531,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   out_us2r <- plot_GAM(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),
                        c(pos_counts_us_lab,pos_counts_us[range2]),
                        c(tests_us_lab,tests_us_s2[range2]))
-  out_us2r_only <- plot_GAM(c(travel_incidence_n$dates[range2]),c(pos_counts_us[range2]),c(tests_us_s2[range2])) # COV-CHECK 2 for antibody comparison
+  #out_us2r_only <- plot_GAM(c(travel_incidence_n$dates[range2]),c(pos_counts_us[range2]),c(tests_us_s2[range2])) # COV-CHECK 2 for antibody comparison
   
   # Estimated prevalence
   plot_polygon(out_us1r$pred_date,out_us1r$pred_med,out_us1r$pred_CI1,out_us1r$pred_CI2,scale_depart_us1[1],col1=colA,colf=colB)
