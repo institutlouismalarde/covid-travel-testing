@@ -2,7 +2,7 @@
 # Load data and format
 # - - - - - - - - - - - - - - - - - - - - - - -
 
-# Load and clean Our World In Data France case data -------------------------------------------------
+# Clean Our World In Data France case data -------------------------------------------------
 
 owid_france_clean <- function(fr_cases){
   date_list <- which(is.na(fr_cases$new_cases))
@@ -20,15 +20,6 @@ owid_france_clean <- function(fr_cases){
   yy
   
 }
-
-
-# Load US infection-induced seroprevalence data ---------------------------------------------------
-# Source: https://covid.cdc.gov/covid-data-tracker/#national-lab
-
-# Load data and calculate midpoint of serosurvey
-us_national_sero <- read_csv("data/us_antibody_data.csv") |> 
-                    mutate(date_mid = date_start + round(as.numeric(date_end-date_start)/2))
-
 
 # Define protocol periods --------------------------------------------------
 

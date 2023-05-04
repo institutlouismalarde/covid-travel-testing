@@ -529,9 +529,9 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   # Smoothing observed prevalence -  merge lab and COV-CHECK 2 data (both day 0)
   out_us1r <- plot_GAM(travel_incidence_n$dates[range1],pos_counts_us[range1],tests_us_s1[range1])
   out_us2r <- plot_GAM(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),
-                       c(round(pos_counts_us_lab),pos_counts_us[range2]),
+                       c(pos_counts_us_lab,pos_counts_us[range2]),
                        c(tests_us_lab,tests_us_s2[range2]))
-  #out_us2r_only <- plot_GAM(c(travel_incidence_n$dates[range2]),c(pos_counts_us[range2]),c(tests_us_s2[range2])) # COV-CHECK 2 for antibody comparison
+  out_us2r_only <- plot_GAM(c(travel_incidence_n$dates[range2]),c(pos_counts_us[range2]),c(tests_us_s2[range2])) # COV-CHECK 2 for antibody comparison
   
   # Estimated prevalence
   plot_polygon(out_us1r$pred_date,out_us1r$pred_med,out_us1r$pred_CI1,out_us1r$pred_CI2,scale_depart_us1[1],col1=colA,colf=colB)
@@ -597,27 +597,26 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   x_date_p <- out_us1r$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
 
   d1 <- which.min(abs(x_date_p - as.Date("2020-07-15")))
-  d2 <- length(x_date_p)
+  d2 <- which.min(abs(x_date_p - as.Date("2021-05-15")))
   
-  sero1 <- 100*us_national_sero$mid[1] # Initial US national serosurvey estimate
+  sero1 <- 3.5; sero2 <- 20.2
   
   # Match to US seroprevalence data 2
-  y_cinc2 <- cumul_CI(out_us2r$sim_inc*scale_depart_us2)
-  x_date_p2 <- out_us2r$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
+  y_cinc2 <- cumul_CI(out_us2r_only$sim_inc*scale_depart_us2)
+  x_date_p2 <- out_us2r_only$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
 
-  d1a <- which.min(abs(x_date_p2 - as.Date("2021-05-06")))
-  d2a <- which.min(abs(x_date_p2 - as.Date("2022-02-11")))
+  d1a <- which.min(abs(x_date_p2 - as.Date("2021-12-15")))
+  d2a <- which.min(abs(x_date_p2 - as.Date("2022-02-15")))
   
-  sero1a <- us_national_sero |> filter(date_mid=="2021-05-06")
-  sero1a <- 100*sero1a$mid[1] # US national serosurvey estimate at start of round 2 travel testing
+  sero1a <- 33.5; sero2a <- 57.7
 
   
   plot(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2]))+sero1,
        xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="Cumulative infections")
   grid(nx=NULL,ny=NA,col="light gray")
   
-  #
-  #points(c(x_date_p2[d1a],x_date_p2[d2a]),c(sero1a,sero2a),pch=17)
+  points(c(x_date_p[d1],x_date_p[d2]),c(sero1,sero2),pch=19)
+  points(c(x_date_p2[d1a],x_date_p2[d2a]),c(sero1a,sero2a),pch=17)
 
   # Plot estimates for first wave
   polygon(c(x_date_p[d1:d2],rev(x_date_p[d1:d2])),
@@ -633,19 +632,6 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
           col=colB,lty=0)
   lines(x_date_p2[d1a:d2a],(y_cinc2$median[d1a:d2a]-min(y_cinc2$median[d1a:d2a])+sero1a),col="red")
   
-  # Plot seroprevalence data over time TO DO
-  # points(c(x_date_p[d1],x_date_p[d2]),c(sero1,sero2),pch=19)
-  # dates_p <- ymd(dates[!is.na(nn) & nn>0])
-  # xx_p <- xx[!is.na(nn) & nn>0] %>% round()
-  # nn_p <- nn[!is.na(nn) & nn>0] %>% round()
-  # 
-  # for(ii in 1:length(nn_p)){
-  #   test_r <- binom.test(xx_p[ii],nn_p[ii])
-  #   CI1 <- as.numeric(test_r$conf.int)[1]
-  #   CI2 <- as.numeric(test_r$conf.int)[2]
-  #   points(dates_p[ii],100*xx_p[ii]/nn_p[ii],col=colA,pch=19);
-  #   lines(c(dates_p[ii],dates_p[ii]),100*c(CI1,CI2),col=colA)
-  # }
   
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
@@ -656,7 +642,13 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
 # References for seroprevalence:
 
-# US data given in data_load.R
+# Prevalence US 1:
+# https://www.cdc.gov/mmwr/volumes/71/wr/mm7117e3.htm?s_cid=mm7117e3_w
+# 33.5% (95% CI = 33.1–34.0) to 57.7% (95% CI = 57.1–58.3)
+
+# Prevalence US 2:
+# https://jamanetwork.com/journals/jama/fullarticle/2784013
+# 3.5% in July 2020 to 20.2% for infection-induced antibodies in May 2021
 
 # Prevalence France 1
 # https://www.santepubliquefrance.fr/etudes-et-enquetes/covid-19-etudes-pour-suivre-la-part-de-la-population-infectee-par-le-sars-cov-2-en-france

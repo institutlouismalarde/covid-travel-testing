@@ -2,8 +2,6 @@
 
 Code for analysis of arrival travel testing data in French Polynesia.
 
-_Note: this is currently a working repository, so non-archived code and data are likely to change over time_
-
 ### Quick start guide
 
 First, set local path in R to GitHub directory, e.g.:
@@ -18,10 +16,6 @@ The main script to reproduce the analysis is in `scripts/main_script.r`. This ca
 
 > `R/plotting_functions.R` - Functions to plot travel testing data, simulation recovery analysis, and departure prevalence estimates.
 
-### Archived versions
-
-• Code to accompany the medRxiv V1 pre-print is in `V1_code`, with file paths as above.
-
 ### Citation
 
-[Adam J Kucharski, Kiyojiken Chung, Maite Aubry, Iotefa Teiti, Anita Teissier, Vaea Richard, Timothy W Russell, Raphaëlle Bos, Sophie Olivier, Van-Mai Cao-Lormeau. Real-time surveillance of international SARS-CoV-2 prevalence using systematic traveller arrival screening, 2022](https://www.medrxiv.org/content/10.1101/2022.10.12.22280928v1)
+Adam J Kucharski, Kiyojiken Chung, Maite Aubry, Iotefa Teiti, Anita Teissier, Vaea Richard, Timothy W Russell, Raphaëlle Bos, Sophie Olivier, Van-Mai Cao-Lormeau. Real-time surveillance of international SARS-CoV-2 prevalence using systematic traveller arrival screening, 2022
