@@ -30,6 +30,11 @@ us_national_sero <- read_csv("data/us_antibody_data.csv") |>
                     mutate(date_mid = date_start + round(as.numeric(date_end-date_start)/2))
 
 
+# Load wastewater data ----------------------------------------------------
+
+wastewater_nat <- fread("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv")
+
+
 # Define protocol periods --------------------------------------------------
 
 # COV-CHECK dates

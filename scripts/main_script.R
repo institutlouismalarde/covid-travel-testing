@@ -14,6 +14,7 @@ library(gridExtra)
 library(DescTools)
 library(gratia)
 library(MASS)
+library(rio)
 
 # Set working directory
 # setwd("~/Documents/GitHub/covid-travel-testing/")

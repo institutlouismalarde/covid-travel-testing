@@ -457,35 +457,23 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   xlim_v <- c(min(travel_incidence_n$dates),max(travel_incidence_n$dates))
   xlim_v2 <- ymd(xlim_v)     
   
-  # France cases
-  par(mfrow=c(3,2),mgp=c(2,0.7,0),mar = c(2,3,1,3))
+
+  par(mfrow=c(4,2),mgp=c(2,0.7,0),mar = c(2,3,1,3))
   
   letter_x <- 1
   
-  plot(fr_cases$date,1e5*fr_cases_ma/fr_pop,ylab="daily domestic cases (per 100k)",type="l",
-       lwd=2,xlim=xlim_v2,ylim=c(0,600),yaxs="i",main="France")
-  grid(nx=NULL,ny=NA,col="light gray")
-  
-  # # Add travel tests
-  par(new=TRUE)
-  plot(travel_incidence_n$dates[range1],tests_fr_s1[range1],col="dark orange",xaxt="n",yaxt="n",ylab="",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,yaxs="i")
+  # France arrivals plot
+  plot(travel_incidence_n$dates[range1],tests_fr_s1[range1],main="France",
+       col="dark orange",ylab="FP arrivals tested weekly",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,yaxs="i")
   lines(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),c(tests_fr_lab,tests_fr_s2[range2]),col="gold",lwd=2)
-  axis(4,col="dark orange",col.axis="dark orange")
-  mtext("arrivals tested weekly", side=4, line=1.5,col="dark orange",cex=0.7) # Label for 2nd axis
-  
+
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
-  # US cases
-  plot(us_cases$date,1e5*us_cases_ma/us_pop,ylab="daily domestic cases (per 100k)",
-       type="l",lwd=2,xlim=xlim_v2,ylim=c(0,600),yaxs="i",main="USA")
-  grid(nx=NULL,ny=NA,col="light gray")
-  
-  par(new=TRUE)
-  plot(travel_incidence_n$dates[range1],tests_us_s1[range1],col="dark orange",xaxt="n",yaxt="n",ylab="",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,yaxs="i")
+  # US arrivals plot
+  plot(travel_incidence_n$dates[range1],tests_us_s1[range1],main="USA",
+       col="dark orange",ylab="FP arrivals tested weekly",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,yaxs="i")
   lines(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),c(tests_us_lab,tests_us_s2[range2]),col="gold",lwd=2)
-  axis(4,col="dark orange",col.axis="dark orange")
-  mtext("arrivals tested weekly", side=4, line=1.5,col="dark orange",cex=0.7) # Label for 2nd axis
-  
+
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # - - -
@@ -514,13 +502,21 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   plot_polygon(out_fr1r$pred_date,out_fr1r$pred_med,out_fr1r$pred_CI1,out_fr1r$pred_CI2,scale_depart_fr1[1],col1=colA,colf=colB)
   plot_polygon(out_fr2r$pred_date,out_fr2r$pred_med,out_fr2r$pred_CI1,out_fr2r$pred_CI2,scale_depart_fr2[1],col1=colA,colf=colB)
 
+  
+  x_text <- min(out_fr1r$pred_date)+20
+  text(x=x_text+5,y=7,labels="  Weekly raw proportion",col="black",adj=0)
+  text(x=x_text,y=6,labels="- Unadjusted GAM estimate",col="blue",adj=0)
+  text(x=x_text,y=5,labels="- Adjusted GAM estimate",col="red",adj=0)
+  points(x=x_text,y=7,pch=19,cex=0.8)
+  
   # - - -
   # US values
   pos_counts_us[is.na(pos_counts_us)] <- 0
   pos_counts_us[is.na(pos_counts_us)] <- 0
   
-  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="prevalence (%)")
-
+  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="arrival prevalence (%)")
+  grid(nx=NULL,ny=NA,col="light gray")
+  
   # Observed prevalence
   plot_CI(travel_incidence_n$dates[range2],round(pos_counts_us)[range2], round(tests_us_s2)[range2])
   plot_CI(travel_incidence_n$dates[range1],round(pos_counts_us)[range1], round(tests_us_s1)[range1])
@@ -536,6 +532,34 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   # Estimated prevalence
   plot_polygon(out_us1r$pred_date,out_us1r$pred_med,out_us1r$pred_CI1,out_us1r$pred_CI2,scale_depart_us1[1],col1=colA,colf=colB)
   plot_polygon(out_us2r$pred_date,out_us2r$pred_med,out_us2r$pred_CI1,out_us2r$pred_CI2,scale_depart_us2[1],col1=colA,colf=colB)
+
+  title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
+  
+  # - - -
+  # Compare to France/US case data
+  
+  # France cases plot
+  plot(fr_cases$date,1e5*fr_cases_ma/fr_pop,ylab="daily domestic cases (per 100k)",type="l",
+       lwd=2,xlim=xlim_v2,ylim=c(0,600),yaxs="i")
+  grid(nx=NULL,ny=NA,col="light gray")
+
+  title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
+  
+  # US cases plot
+  ymax <- 300
+  plot(us_cases$date,1e5*us_cases_ma/us_pop,ylab="daily domestic cases (per 100k)",
+       type="l",lwd=2,xlim=xlim_v2,ylim=c(0,300),yaxs="i")
+  grid(nx=NULL,ny=NA,col="light gray")
+  
+  par(new=TRUE)
+  waste_y <- max(wastewater_nat$effective_concentration_rolling_average)/(max(1e5*us_cases_ma/us_pop,na.rm=T)/ymax)
+  
+  plot(wastewater_nat$sampling_week,wastewater_nat$effective_concentration_rolling_average,col="dark orange",xaxt="n",
+       yaxt="n",ylab="",ylim=c(0,waste_y),type="l",lwd=2,xlim=xlim_v,yaxs="i")
+  
+  axis(4,col="dark orange",col.axis="dark orange")
+  mtext("SARS-CoV-2 concentration", side=4, line=1.5,col="dark orange",cex=0.7) # Label for 2nd axis
+
 
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
 
@@ -557,7 +581,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   d4 <- as.Date("2021-01-31"); sero4a <- 15
   
   plot(x_date_p,y_cinc$median,
-       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="Cumulative infections")
+       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="cumulative % infected")
   grid(nx=NULL,ny=NA,col="light gray")
   points(c(x_date_p[d1],x_date_p[d2]),c(sero1,sero2),pch=19)
   lines(c(x_date_p[d1],x_date_p[d1]),c(6.9,11)); lines(c(x_date_p[d2],x_date_p[d2]),c(10.8,15.6))
@@ -570,6 +594,11 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
             rev((y_cinc$upper[d1:d2]-min(y_cinc$upper[d1:d2])+sero1)) ),
           col=colB,lty=0)
   lines(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2])+sero1),col="red")
+  
+  x_text <- min(out_fr1r$pred_date)+20
+  text(x=x_text+5,y=60,labels="  Domestic seroprevalence surveys",col="black",adj=0)
+  text(x=x_text,y=50,labels="- Estimated from FP arrivals",col="red",adj=0)
+  points(x=x_text,y=60,pch=19,cex=0.8)
   
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
@@ -613,11 +642,16 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
   
   plot(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2]))+sero1,
-       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="Cumulative infections")
+       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="cumulative % infected")
   grid(nx=NULL,ny=NA,col="light gray")
+
+  # Plot seroprevalence data over time in US (national labs)
   
-  #
-  #points(c(x_date_p2[d1a],x_date_p2[d2a]),c(sero1a,sero2a),pch=17)
+  for(ii in 1:nrow(us_national_sero)){
+    s_pick <- us_national_sero[ii,]
+    points(s_pick$date_mid,100*s_pick$mid,pch=19,cex=0.7)
+    lines(c(s_pick$date_mid,s_pick$date_mid),100*c(s_pick$lower,s_pick$upper))
+  }
 
   # Plot estimates for first wave
   polygon(c(x_date_p[d1:d2],rev(x_date_p[d1:d2])),
@@ -632,31 +666,17 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
             rev((y_cinc2$upper[d1a:d2a]-min(y_cinc2$upper[d1a:d2a]))+sero1a) ),
           col=colB,lty=0)
   lines(x_date_p2[d1a:d2a],(y_cinc2$median[d1a:d2a]-min(y_cinc2$median[d1a:d2a])+sero1a),col="red")
-  
-  # Plot seroprevalence data over time TO DO
-  # points(c(x_date_p[d1],x_date_p[d2]),c(sero1,sero2),pch=19)
-  # dates_p <- ymd(dates[!is.na(nn) & nn>0])
-  # xx_p <- xx[!is.na(nn) & nn>0] %>% round()
-  # nn_p <- nn[!is.na(nn) & nn>0] %>% round()
-  # 
-  # for(ii in 1:length(nn_p)){
-  #   test_r <- binom.test(xx_p[ii],nn_p[ii])
-  #   CI1 <- as.numeric(test_r$conf.int)[1]
-  #   CI2 <- as.numeric(test_r$conf.int)[2]
-  #   points(dates_p[ii],100*xx_p[ii]/nn_p[ii],col=colA,pch=19);
-  #   lines(c(dates_p[ii],dates_p[ii]),100*c(CI1,CI2),col=colA)
-  # }
-  
+
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
-  dev.copy(pdf,paste("plots/Fig4_estimates_",test_type,"_",btt,".pdf",sep=""),width=6,height=5)
+  dev.copy(pdf,paste("plots/Fig4_estimates_",test_type,"_",btt,".pdf",sep=""),width=6,height=7)
   dev.off()
 
 }
 
 # References for seroprevalence:
 
-# US data given in data_load.R
+# US national frequent data given in data_load.R
 
 # Prevalence France 1
 # https://www.santepubliquefrance.fr/etudes-et-enquetes/covid-19-etudes-pour-suivre-la-part-de-la-population-infectee-par-le-sars-cov-2-en-france
