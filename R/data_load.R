@@ -35,6 +35,11 @@ us_national_sero <- read_csv("data/us_antibody_data.csv") |>
 wastewater_nat <- fread("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv")
 
 
+
+# Load tourism data -------------------------------------------------------
+# Source: https://data.ispf.pf/themes/SystemeProductif/Tourisme/Details.aspx
+tourism_data <- read_csv("data/Tourism_data_ISPF.csv")
+
 # Define protocol periods --------------------------------------------------
 
 # COV-CHECK dates

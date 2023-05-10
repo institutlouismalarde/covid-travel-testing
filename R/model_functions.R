@@ -166,6 +166,8 @@ delay_test <- function(n_depart_x = 310, # Number of daily departing infections
                        dep_test="PCR"
                        ){
 
+  # n_depart_x = 31; before_travel_test = 3; after_arrival_test = 0; daily_growth=0; dep_test="PCR"
+  
   # Set up vector of days
   max_days <- nrow(p_by_day)
   x_days <- 1:max_days
@@ -239,6 +241,7 @@ simulate_prev <- function(n_incidence, # Time series of daily departing infectio
   prev_negative_dep <- rep(0,n_max)
   prev_pos_dep <- rep(0,n_max)
   prev_positive_arr <- rep(0,n_max)
+  prev_tested_arr <- rep(0,n_max)
   
   # Define departure distribution
   if(dep_test=="PCR"){
@@ -264,10 +267,13 @@ simulate_prev <- function(n_incidence, # Time series of daily departing infectio
 
     arrive_cut <- length(out_arrive_delay) # Adjust for censoring at start of time series
     
-    # Shift to match day of depature and arrival test prevalence in timeseries
+    # XX REFACTOR TO INCLUDE DENOMINATORS IN BINOMIAL
+    # Shift to match day of departure and arrival test prevalence in timeseries
     if(ii<(n_max-aat+1)){
+      prev_tested_arr[ii+aat] <- sum(negative_dep_ii)/sum((prop_incidence)[pick_window]) # Proportion tested at arrival
       prev_positive_arr[ii+aat] <- sum(out_arrive_delay*p_by_day$median[1:arrive_cut]) # Detected at arrival
     }
+    
   }
   
   list(in_incidence=prop_incidence,
@@ -300,7 +306,7 @@ estimate_vals <- function(n_detect,
     neg_dist <- neg_depart
   }
   
-  # DEPRECATED BELOW
+  # HAVE DEPRECATED BELOW GROWTH ADJUSTMENTS
   # Add daily growth calculation depending on whether vector - rev data to look backwards
   if(length(daily_growth)==1){ phase_shift <- phase_p(1:max_days,growth=daily_growth,maxd=max_days) }
   if(length(daily_growth)>=max_days){phase_shift <- rev(tail(daily_growth,max_days))}

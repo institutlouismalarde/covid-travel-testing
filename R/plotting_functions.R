@@ -8,6 +8,8 @@ figure_schematic_testing <- function(n_depart_N=31,
                                      after_arrival_test=0,
                                      before_travel_test=3) {
   
+  # DEBUG  n_depart_N=31; after_arrival_test=4; before_travel_test=3
+  
   par(mfrow=c(2,3),mgp=c(2,0.7,0),mar = c(4,3,1,1))
   col_red <- rgb(1,0.5,0.5)
   col_green <- rgb(0.6,1,0.6)
@@ -35,8 +37,8 @@ figure_schematic_testing <- function(n_depart_N=31,
   polygon(c(x_labels,rev(x_labels)),c(0*out_arrive,rev(rep(n_depart_N,length(x_labels)))),col=col_green,lty=0)
   polygon(c(x_labels,rev(x_labels)),c(0*out_arrive,rev(out_arrive)),col=col_red,lty=0)
   lines(c(before_travel_test,before_travel_test),c(-10,1e3),lty=2) 
-  text(x=x_shift,y=0.8,labels="detected",adj=0,col="dark green")
   text(x=x_shift,y=0.05,labels="missed",adj=0,col="dark red")
+  text(x=x_shift,y=0.8,labels="detected",adj=0,col="dark green")
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # At arrival
@@ -52,6 +54,33 @@ figure_schematic_testing <- function(n_depart_N=31,
   text(x=x_shift,y=0.8,labels="detected",adj=0,col="dark green")
   text(x=x_shift,y=0.05,labels="missed",adj=0,col="dark red")
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
+  
+  # - - - 
+  # Evaluation for binomial distribution:
+  p_n1_p2 <- sum(output_n_det)/n_depart_N   # Probability positive test 2 and negative test 1
+                                            # Need to add in days = after_arrival_test
+  p_n1 <- sum(1-p_by_day$median)/n_depart_N   # Probability negative test 1 - no delay
+  
+  #w <- 0.1 # Actual probability of infection
+  x <- 100 # Number tested at arrival
+  y <- 10 # Number positive at arrival
+    
+  inf_d <- y/(x*p_n1_p2 + y - y*p_n1) # Expected infections at departure, based on E(y) = x*(w*p_n1_p2)/(w*p_n1+(1-w))
+  inf_d*(1-p_n1) # Proportion positive at departure
+  
+  # Calculate profile likelihood for w (i.e. probability of infection at departure)
+  xx_search <- seq(0,1,0.01)
+  likelihood_f <- function(w){dbinom(y,x,w*p_n1_p2/(w*p_n1+(1-w)),log=T)}
+  yy_out <- sapply(xx_search,likelihood_f)
+  mle_est <- xx_search[which.max(yy_out)]
+  prof_lik <- xx_search[(max(yy_out)-yy_out)<qchisq(0.95,1)/2]
+  prev_est <- c(mle_est,min(prof_lik),max(prof_lik))*(1-p_n1) # convert back into probability test positive)
+  
+  100*prev_est
+  
+  plot(xx_search,yy_out)
+  plot(xx_search,xx_search[2]*dbeta(xx_search,shape1=5,shape2=5,log=T))
+  
   
   # - - - 
   # Plot incidence simulation
@@ -98,6 +127,8 @@ figure_schematic_testing <- function(n_depart_N=31,
 # Figure 2: Growth phase bias -----------------------------------------------
 
 figure_phase_bias <- function(btt=3,att=4){
+  
+  # btt=3; att=4
   
   # Sample on departure
   n_total <- 1e3
