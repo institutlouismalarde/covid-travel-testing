@@ -38,7 +38,7 @@ wastewater_nat <- fread("https://raw.githubusercontent.com/biobotanalytics/covid
 
 # Load tourism data -------------------------------------------------------
 # Source: https://data.ispf.pf/themes/SystemeProductif/Tourisme/Details.aspx
-tourism_data <- read_csv("data/Tourism_data_ISPF.csv")
+# tourism_data <- read_csv("data/Tourism_data_ISPF.csv")
 
 # Define protocol periods --------------------------------------------------
 

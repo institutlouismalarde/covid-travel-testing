@@ -55,33 +55,7 @@ figure_schematic_testing <- function(n_depart_N=31,
   text(x=x_shift,y=0.05,labels="missed",adj=0,col="dark red")
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
-  # - - - 
-  # Evaluation for binomial distribution:
-  p_n1_p2 <- sum(output_n_det)/n_depart_N   # Probability positive test 2 and negative test 1
-                                            # Need to add in days = after_arrival_test
-  p_n1 <- sum(1-p_by_day$median)/n_depart_N   # Probability negative test 1 - no delay
-  
-  #w <- 0.1 # Actual probability of infection
-  x <- 100 # Number tested at arrival
-  y <- 10 # Number positive at arrival
-    
-  inf_d <- y/(x*p_n1_p2 + y - y*p_n1) # Expected infections at departure, based on E(y) = x*(w*p_n1_p2)/(w*p_n1+(1-w))
-  inf_d*(1-p_n1) # Proportion positive at departure
-  
-  # Calculate profile likelihood for w (i.e. probability of infection at departure)
-  xx_search <- seq(0,1,0.01)
-  likelihood_f <- function(w){dbinom(y,x,w*p_n1_p2/(w*p_n1+(1-w)),log=T)}
-  yy_out <- sapply(xx_search,likelihood_f)
-  mle_est <- xx_search[which.max(yy_out)]
-  prof_lik <- xx_search[(max(yy_out)-yy_out)<qchisq(0.95,1)/2]
-  prev_est <- c(mle_est,min(prof_lik),max(prof_lik))*(1-p_n1) # convert back into probability test positive)
-  
-  100*prev_est
-  
-  plot(xx_search,yy_out)
-  plot(xx_search,xx_search[2]*dbeta(xx_search,shape1=5,shape2=5,log=T))
-  
-  
+
   # - - - 
   # Plot incidence simulation
   
@@ -443,6 +417,8 @@ figure_basic_data <- function() {
 # Figure 4: Reconstruct epidemics -----------------------------------------------
 
 figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
+  
+  # DEBUG test_type="PCR"; btt=3
 
   # Pop size
   us_pop <- 329.5e6
@@ -515,18 +491,29 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="prevalence (%)")
   grid(nx=NULL,ny=NA,col="light gray")
   
-  # Observed prevalence
-  plot_CI(travel_incidence_n$dates[range1],round(pos_counts_fr)[range1], round(tests_fr_s1)[range1])
-  plot_CI(travel_incidence_n$dates[range2],round(pos_counts_fr)[range2], round(tests_fr_s2)[range2])
-  plot_CI(travel_incidence_n$dates[range_lab],round(pos_counts_fr_lab), tests_fr_lab)
+  data_fr1 <- data.frame(pos=round(pos_counts_fr)[range1],num=round(tests_fr_s1)[range1])
+  data_fr2 <- data.frame(pos=round(c(pos_counts_fr_lab,pos_counts_fr[range2])),num=c(tests_fr_lab,tests_fr_s2[range2]))
   
-  # Smoothing observed prevalence -  merge lab and COV-CHECK 2 data (both day 0)
-  out_fr1r <- plot_GAM(travel_incidence_n$dates[range1],pos_counts_fr[range1],tests_fr_s1[range1])
-  out_fr2r <- plot_GAM(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),
-                       c(pos_counts_fr_lab,pos_counts_fr[range2]),
-                       c(tests_fr_lab,tests_fr_s2[range2]))
-  #out_fr_labr <- plot_GAM(,,)
-  title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
+  # Observed prevalence
+  # plot_CI(travel_incidence_n$dates[range1],round(pos_counts_fr)[range1], round(tests_fr_s1)[range1])
+  # plot_CI(travel_incidence_n$dates[range2],round(pos_counts_fr)[range2], round(tests_fr_s2)[range2])
+  # plot_CI(travel_incidence_n$dates[range_lab],round(pos_counts_fr_lab), tests_fr_lab)
+  # 
+  #plot_CI_def(travel_incidence_n$dates[range1],  apply(data_fr1,1,function(x){prev_estimate(x,3,4)$prev_est}) )
+  
+  bootstrap_GAM(travel_incidence_n$dates[range1],data_fr1)
+  
+  plot_CI_def(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),  apply(data_fr2,1,function(x){prev_estimate(x,3,4)$prev_est}) )
+  
+
+  # # 
+  # # Smoothing observed prevalence -  merge lab and COV-CHECK 2 data (both day 0)
+  # out_fr1r <- plot_GAM(travel_incidence_n$dates[range1],pos_counts_fr[range1],tests_fr_s1[range1])
+  # out_fr2r <- plot_GAM(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),
+  #                      c(pos_counts_fr_lab,pos_counts_fr[range2]),
+  #                      c(tests_fr_lab,tests_fr_s2[range2]))
+  # #out_fr_labr <- plot_GAM(,,)
+
   
   # Estimated prevalence
   colA <- "red"; colB <- rgb(1,0,0,0.1)
@@ -539,6 +526,8 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   text(x=x_text,y=6,labels="- Unadjusted GAM estimate",col="blue",adj=0)
   text(x=x_text,y=5,labels="- Adjusted GAM estimate",col="red",adj=0)
   points(x=x_text,y=7,pch=19,cex=0.8)
+  
+  title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # - - -
   # US values
@@ -593,7 +582,8 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
 
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
-
+  #par(las=1)
+  
   # - - -
   # Match to France seroprevalence data 1
 

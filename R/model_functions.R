@@ -22,6 +22,21 @@ plot_CI <- function(dates,xx,nn,colA="black") {
   
 }
 
+# Plot data and binom CI --------------------------------------------------
+
+plot_CI_def <- function(dates,data_in,colA="black") {
+  
+  xx <- data_in[,1]
+  c_lower <- data_in[,2]
+  c_upper <- data_in[,3]
+  
+  for(ii in 1:length(dates)){
+    points(dates[ii],xx[ii],col=colA,pch=19);
+    lines(c(dates[ii],dates[ii]),c(c_lower[ii],c_upper[ii]),col=colA)
+  }
+  
+}
+
 # Output mid and 95% interval --------------------------------------------------
 
 c.text<-function(x1,x2,x3,sigF=2){
@@ -29,35 +44,176 @@ c.text<-function(x1,x2,x3,sigF=2){
   paste(bp1[1],"% (",bp1[2],"-",bp1[3],"%)",sep="")
 }
 
-# Calculate CI for cumulative incidence --------------------------------------------------
 
-cumul_CI <- function(sims,cumulative=T) {
+
+# Estimate MLE and 95% profile likelihood ---------------------------------
+
+prev_estimate <- function(data_in, 
+                          before_travel_test=3, # 
+                          after_arrival_test=4,
+                          sim_out_n = 100# 
+                          ){
   
-  # Cumulative sums
-  if(cumulative==T){
-    sim_cumul <- apply(sims,2,cumsum)
-  }else{
-    sim_cumul <- sims
-  }
+  # before_travel_test=3; after_arrival_test=4; sim_out_n=100
   
-  # Calculate 95% interval
-  sim_95 <- apply(sim_cumul,1,function(x){quantile(x,c(0.025,0.5,0.975))}) %>% t()
+  y <- as.numeric(data_in[1]) # Number positive at arrival
+  x <- as.numeric(data_in[2]) # Number tested at arrival
+
+  # Calculate detection proportion at arrival
+  n_depart_N <- nrow(p_by_day)
+  output_n_det <- delay_test(n_depart_N,before_travel_test,after_arrival_test)$n_arrive_detect; output_n_det <- output_n_det[output_n_det>0]
   
-  # sim_95 <- apply(sims,1,function(x){quantile(x,c(0.025,0.5,0.975))})
-  # 
-  # # Cumulative sums
-  # if(cumulative==T){
-  #   sim_cumul <- apply(sim_95,1,cumsum)
-  # }else{
-  #   sim_cumul <- apply(sim_95,1,cumsum)
-  # }
+  # Define probabilities
+  p_n1_p2 <- sum(output_n_det)/n_depart_N   # P(negative at departure | infected)
+  p_n1 <- sum(1-p_by_day$median)/n_depart_N   # P(negative at departure & positive at arrival | infected)
   
-  cumul_out <- data.frame(lower=sim_95[,1],median=sim_95[,2],upper=sim_95[,3])
-  cumul_out
+  # Calculate profile likelihood for w (i.e. probability of infection at departure)
+  xx_search <- seq(0,1,0.001)
+  likelihood_f <- function(w){dbinom(y,x,w*p_n1_p2/(w*p_n1+(1-w)),log=T)}
+  pp_out <- sapply(xx_search,likelihood_f)
   
+  # Extract MLE and 95% CI:
+  mle_est <- y/(x*p_n1_p2 + y - y*p_n1) #xx_search[which.max(yy_out)]
+  prof_lik <- xx_search[(max(pp_out)-pp_out)<qchisq(0.95,1)/2]
+  prev_est <- 100*c(mle_est,min(prof_lik),max(prof_lik))*(1-p_n1) # convert back into probability test positive)
+
+  posterior_p <- exp(pp_out)/sum(exp(pp_out)) # Define posterior of p (assuming uniform prior)
+  
+  # Calculate variance of p
+  mean_p <- sum(xx_search*posterior_p)
+  variance_p <- sum((xx_search-mean_p)^2*posterior_p) # Define variance of p
+                                 
+  sim_out <- sample(xx_search,sim_out_n,prob = posterior_p,replace=T)*(1-p_n1) # convert back into probability test positive)
+
+  list(prev_est=prev_est,
+       map_est=mle_est,
+       var_est=variance_p,
+       sim_out=sim_out
+  )
 }
 
+# Plot bootstrap for prevalence ------------------------------------------------------
 
+bootstrap_est <- function(dates,
+                          data_input, # First column positives at arrival, second column tests
+                          n_val=NULL,
+                          return_vals=T,
+                          bootstrap_n=1e3,
+                          kk=NULL,
+                          col1="blue",
+                          colf = rgb(0,0,1,0.2)){
+  
+  # DEBUG bootstrap_n=1e3; kk=NULL;data_input=data_fr1; dates=travel_incidence_n$dates[range1];col1="blue"; colf = rgb(0,0,1,0.2);
+
+  # Format dates and remove data points with no tests
+  n_test <- data_input[,2]
+  x_date <- ymd(dates)
+  x_date <- as.numeric(x_date)
+  
+  valid_x <- (!is.na(n_test) & n_test>1)  # Remove NA entries
+  x_date <- x_date[valid_x]
+  data_in <- data_input[valid_x,]
+
+  # Set up bootstrap matrix
+  store_sim <- matrix(NA,nrow=length(x_date),ncol=bootstrap_n)
+  prev_store <- matrix(NA,nrow=length(x_date),ncol=4) # Final entry is variance
+  
+  # Simulate prevalence from posterior for each time poinnt
+  for(ii in 1:length(x_date)){
+    est_vals <- prev_estimate(data_in[ii,],3,4,sim_out_n=bootstrap_n)
+    sim_ii <- est_vals$sim_out # simulated values
+    store_sim[ii,] <- sim_ii
+    prev_store[ii,] <- c(est_vals$prev_est,est_vals$var_est)
+  }
+
+  # - - -
+  # Fit weighted GAMs for estimate data point, weighted by inverse variance of each estimate
+  x_date_range <- seq( min(x_date),max(x_date),1)
+
+  mult_v <- 100 # Set multiplier to 100 (e.g. percent vs proportion)
+
+  
+  y_val <- prev_store[,1]
+  weight_var <- 1/prev_store[,4]; weight_var <- weight_var/mean(weight_var)
+  
+  model1 <- gam(y_val~s(x_date),family = "gaussian",weights=weight_var)
+  
+  # Predict curve from data
+  preds <- predict(model1, newdata = list(x_date=x_date_range), type = "link", se.fit = TRUE)
+
+  critval <- 1.96; upperCI <- preds$fit + (critval * preds$se.fit); lowerCI <- preds$fit - (critval * preds$se.fit)
+  store_gam <- preds$fit
+  
+  CI1plotF <- model1$family$linkinv(lowerCI)
+  CI2plotF <- model1$family$linkinv(upperCI)
+  
+  # Iterate over bootstrapped simulations
+  #  store_sim_gam <- matrix(NA,nrow=length(x_date_range),ncol=bootstrap_n)
+  # for(ii in 1:bootstrap_n){
+  #   
+  #   # Extract simulation for that bootstrap sample
+  #   y_val <- mult_v*store_sim[,ii]
+  #   
+  #   # x_date_flat <- rep(x_date,bootstrap_n)
+  #   # y_sim_flat <- mult_v*store_sim; dim(y_sim_flat) <- NULL
+  #   # 
+  #   # Fit gam
+  #   if(is.null(kk)){
+  #     model1 <- gam(y_val~s(x_date),family = "gaussian")
+  #   }else{
+  #     model1 <- gam(y_val~s(x_date,k=kk),family = "gaussian")
+  #   }
+  #   
+  # 
+  #   # Predict curve from data
+  #   preds <- predict(model1, newdata = list(x_date=x_date_range), type = "link", se.fit = TRUE)
+  #   store_sim_gam[,ii] <- preds$fit
+  # 
+  # }
+  # Calculate median and 95% prediction interval of GAM fits
+  # sim_95 <- apply(store_sim_gam,1,function(x){quantile(x,c(0.025,0.5,0.975))}) %>% t()
+  # CI1plotF <- sim_95[,1]
+  # fitPlotF <- sim_95[,2]
+  # CI2plotF <- sim_95[,3]
+  
+  # Calculate 95% credible interval for parameter
+  sim_95 <- apply(mult_v*store_sim,1,function(x){quantile(x,c(0.025,0.5,0.975))}) %>% t()
+  CI1plotP <- sim_95[,1]
+  fitPlotP <- sim_95[,2]
+  CI2plotP <- sim_95[,3]
+
+  # Plot curves and output estimates
+  x_date2 <- as.Date(x_date_range)
+  
+  plot(x_date,prev_store[,1])
+
+  plot_CI_def(x_date,cbind(prev_store[,1],CI1plotP,CI2plotP))
+  polygon(c(x_date2,rev(x_date2)),(c(CI1plotF,rev(CI2plotF))),col=colf,lty=0)
+  lines(x_date2, (store_gam) ,col=col1,lwd=2)
+  
+  # Simulate incidence from bootstrap prevalence estimates
+  sims_inc <- apply(sims,1,prev_to_inc) %>% t()
+  
+  
+  if(return_vals==T){
+    list(pred_date=x_date2,
+         pred_med=100*fitPlotF,
+         pred_CI1=mult_v*CI1plotF,
+         pred_CI2=mult_v*CI2plotF,
+         sim_date = as.Date(x_date),
+         #sim_out = sims,
+         sim_inc = sims_inc)
+  }
+  
+  # CUT CODE
+  
+  # Plot posterior draws
+  # for(kk in 1:100){
+  #   points(x_date,mult_v*store_sim[,kk],pch=19,cex=0.5,col=rgb(0.5,0.5,0.5,0.1))
+  # }
+  
+  
+}
 
 # Plot GAM for dates ------------------------------------------------------
 
@@ -110,6 +266,7 @@ plot_GAM <- function(dates,x_val,n_val=NULL,return_vals=T,kk=NULL,family_f="bino
   lines(x_date2, mult_v*(fitPlotF) ,col=col1,lwd=2)
   
   # Simulate incidence from GAM prevalence estimates
+  # By definition simulation uses original timescale of data
   sims <- simulate(model1, nsim = 1e3, seed = 42) 
   sims_inc <- apply(sims,1,prev_to_inc) %>% t()
   
@@ -122,6 +279,34 @@ plot_GAM <- function(dates,x_val,n_val=NULL,return_vals=T,kk=NULL,family_f="bino
          sim_inc = mult_v*sims_inc)
   }
 
+}
+
+# Calculate CI for cumulative incidence --------------------------------------------------
+
+cumul_CI <- function(sims,cumulative=T) {
+  
+  # Cumulative sums
+  if(cumulative==T){
+    sim_cumul <- apply(sims,2,cumsum)
+  }else{
+    sim_cumul <- sims
+  }
+  
+  # Calculate 95% interval
+  sim_95 <- apply(sim_cumul,1,function(x){quantile(x,c(0.025,0.5,0.975))}) %>% t()
+  
+  # sim_95 <- apply(sims,1,function(x){quantile(x,c(0.025,0.5,0.975))})
+  # 
+  # # Cumulative sums
+  # if(cumulative==T){
+  #   sim_cumul <- apply(sim_95,1,cumsum)
+  # }else{
+  #   sim_cumul <- apply(sim_95,1,cumsum)
+  # }
+  
+  cumul_out <- data.frame(lower=sim_95[,1],median=sim_95[,2],upper=sim_95[,3])
+  cumul_out
+  
 }
 
 
@@ -276,6 +461,9 @@ simulate_prev <- function(n_incidence, # Time series of daily departing infectio
     
   }
   
+  # CHECKS
+  prev_pos_dep[50]/(prev_positive_arr[50]/prev_tested_arr[50])
+  
   list(in_incidence=prop_incidence,
        out_pos_depart=prev_depart,
        out_pos_arrive=prev_positive_arr
@@ -372,13 +560,13 @@ prev_to_inc <- function(x,d_growth=0,weekly_adjust=7){
   pcr_density <- sum(p_by_day$median) # Duration of positivity
   
   # Estimate incidence (note need to then shift so that incidence estimates are mean_pcr ahead of prevalence)
-  # And scale to weekly value
+  # And scale to weekly incidence value
   weekly_adjust*x/pcr_density
 
 }
 
 
-# Convert incidence to prevalence using daily values via deconvolution ----------------------
+# Convert prevalence to incidence using daily values via deconvolution ----------------------
 
 prev_to_inc_daily <- function(prevalence){
   
