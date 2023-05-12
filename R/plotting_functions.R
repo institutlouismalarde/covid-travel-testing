@@ -438,27 +438,27 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   us_cases_ma <- rollmean(us_cases$new_cases,k=7,fill=c(NA,NA,NA))
 
   # First phase - testing on day 4
-  scale_depart_fr1 <- estimate_vals(10,daily_growth=0,before_travel_test=3,dep_test = "PCR")$ratio_total
-  scale_depart_us1 <- estimate_vals(10,daily_growth=0,before_travel_test=3,dep_test = "PCR")$ratio_total
-  
-  # Second phrase - testing on day 0
-  scale_depart_fr2 <- estimate_vals(10,daily_growth=0,before_travel_test=btt,after_arrival_test=0,dep_test = test_type)$ratio_total
-  scale_depart_us2 <- estimate_vals(10,daily_growth=0,before_travel_test=btt,after_arrival_test=0,dep_test = test_type)$ratio_total
-  
-  # Combine the two different scalings
-  scale_depart_fr <- scale_depart_fr2; scale_depart_fr[range1] <- scale_depart_fr1[range1]
-  scale_depart_us <- scale_depart_us2; scale_depart_fr[range1] <- scale_depart_us1[range1]
+  # scale_depart_fr1 <- estimate_vals(10,daily_growth=0,before_travel_test=3,dep_test = "PCR")$ratio_total
+  # scale_depart_us1 <- estimate_vals(10,daily_growth=0,before_travel_test=3,dep_test = "PCR")$ratio_total
+  # 
+  # # Second phrase - testing on day 0
+  # scale_depart_fr2 <- estimate_vals(10,daily_growth=0,before_travel_test=btt,after_arrival_test=0,dep_test = test_type)$ratio_total
+  # scale_depart_us2 <- estimate_vals(10,daily_growth=0,before_travel_test=btt,after_arrival_test=0,dep_test = test_type)$ratio_total
+  # 
+  # # Combine the two different scalings
+  # scale_depart_fr <- scale_depart_fr2; scale_depart_fr[range1] <- scale_depart_fr1[range1]
+  # scale_depart_us <- scale_depart_us2; scale_depart_fr[range1] <- scale_depart_us1[range1]
   
   # Calculate positive values by test phase
-  fr_pos_vals1 <- scale_depart_fr1*pos_counts_fr
-  us_pos_vals1 <- scale_depart_us1*pos_counts_us
-
-  fr_pos_vals2 <- scale_depart_fr2*pos_counts_fr
-  us_pos_vals2 <- scale_depart_us2*pos_counts_us
-  
-  fr_pos_vals_lab <- scale_depart_fr2*pos_counts_fr_lab
-  us_pos_vals_lab <- scale_depart_fr2*pos_counts_us_lab
-  
+  # fr_pos_vals1 <- scale_depart_fr1*pos_counts_fr
+  # us_pos_vals1 <- scale_depart_us1*pos_counts_us
+  # 
+  # fr_pos_vals2 <- scale_depart_fr2*pos_counts_fr
+  # us_pos_vals2 <- scale_depart_us2*pos_counts_us
+  # 
+  # fr_pos_vals_lab <- scale_depart_fr2*pos_counts_fr_lab
+  # us_pos_vals_lab <- scale_depart_fr2*pos_counts_us_lab
+  # 
   # - - -
   # Plot incidence
   xlim_v <- c(min(travel_incidence_n$dates),max(travel_incidence_n$dates))
@@ -488,23 +488,24 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   pos_counts_fr[is.na(pos_counts_fr)] <- 0
   pos_counts_fr[is.na(pos_counts_fr)] <- 0
   
-  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="prevalence (%)")
+  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="estimated departure prevalence (%)")
   grid(nx=NULL,ny=NA,col="light gray")
   
   data_fr1 <- data.frame(pos=round(pos_counts_fr)[range1],num=round(tests_fr_s1)[range1])
   data_fr2 <- data.frame(pos=round(c(pos_counts_fr_lab,pos_counts_fr[range2])),num=c(tests_fr_lab,tests_fr_s2[range2]))
+  
+  # Include shift to get estimate at departure
+  out_fr1r <- bootstrap_est(travel_incidence_n$dates[range1]-7,data_fr1)
+  out_fr2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_fr2,after_arrival_test=0)
   
   # Observed prevalence
   # plot_CI(travel_incidence_n$dates[range1],round(pos_counts_fr)[range1], round(tests_fr_s1)[range1])
   # plot_CI(travel_incidence_n$dates[range2],round(pos_counts_fr)[range2], round(tests_fr_s2)[range2])
   # plot_CI(travel_incidence_n$dates[range_lab],round(pos_counts_fr_lab), tests_fr_lab)
   # 
-  #plot_CI_def(travel_incidence_n$dates[range1],  apply(data_fr1,1,function(x){prev_estimate(x,3,4)$prev_est}) )
-  
-  bootstrap_GAM(travel_incidence_n$dates[range1],data_fr1)
-  
-  plot_CI_def(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),  apply(data_fr2,1,function(x){prev_estimate(x,3,4)$prev_est}) )
-  
+  #plot_CI_def(,  apply(data_fr1,1,function(x){prev_estimate(x,3,4)$prev_est}) )
+
+
 
   # # 
   # # Smoothing observed prevalence -  merge lab and COV-CHECK 2 data (both day 0)
@@ -516,9 +517,9 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
   
   # Estimated prevalence
-  colA <- "red"; colB <- rgb(1,0,0,0.1)
-  plot_polygon(out_fr1r$pred_date,out_fr1r$pred_med,out_fr1r$pred_CI1,out_fr1r$pred_CI2,scale_depart_fr1[1],col1=colA,colf=colB)
-  plot_polygon(out_fr2r$pred_date,out_fr2r$pred_med,out_fr2r$pred_CI1,out_fr2r$pred_CI2,scale_depart_fr2[1],col1=colA,colf=colB)
+  # colA <- "red"; colB <- rgb(1,0,0,0.1)
+  # plot_polygon(out_fr1r$pred_date,out_fr1r$pred_med,out_fr1r$pred_CI1,out_fr1r$pred_CI2,scale_depart_fr1[1],col1=colA,colf=colB)
+  # plot_polygon(out_fr2r$pred_date,out_fr2r$pred_med,out_fr2r$pred_CI1,out_fr2r$pred_CI2,scale_depart_fr2[1],col1=colA,colf=colB)
 
   
   x_text <- min(out_fr1r$pred_date)+20
@@ -534,24 +535,32 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   pos_counts_us[is.na(pos_counts_us)] <- 0
   pos_counts_us[is.na(pos_counts_us)] <- 0
   
-  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="arrival prevalence (%)")
+  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="estimated departure prevalence (%)")
   grid(nx=NULL,ny=NA,col="light gray")
   
   # Observed prevalence
-  plot_CI(travel_incidence_n$dates[range2],round(pos_counts_us)[range2], round(tests_us_s2)[range2])
-  plot_CI(travel_incidence_n$dates[range1],round(pos_counts_us)[range1], round(tests_us_s1)[range1])
-  plot_CI(travel_incidence_n$dates[range_lab],round(pos_counts_us_lab), tests_us_lab)
   
-  # Smoothing observed prevalence -  merge lab and COV-CHECK 2 data (both day 0)
-  out_us1r <- plot_GAM(travel_incidence_n$dates[range1],pos_counts_us[range1],tests_us_s1[range1])
-  out_us2r <- plot_GAM(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),
-                       c(round(pos_counts_us_lab),pos_counts_us[range2]),
-                       c(tests_us_lab,tests_us_s2[range2]))
-  #out_us2r_only <- plot_GAM(c(travel_incidence_n$dates[range2]),c(pos_counts_us[range2]),c(tests_us_s2[range2])) # COV-CHECK 2 for antibody comparison
+  data_us1 <- data.frame(pos=round(pos_counts_us)[range1],num=round(tests_us_s1)[range1])
+  data_us2 <- data.frame(pos=round(c(pos_counts_us_lab,pos_counts_us[range2])),num=c(tests_us_lab,tests_us_s2[range2]))
   
-  # Estimated prevalence
-  plot_polygon(out_us1r$pred_date,out_us1r$pred_med,out_us1r$pred_CI1,out_us1r$pred_CI2,scale_depart_us1[1],col1=colA,colf=colB)
-  plot_polygon(out_us2r$pred_date,out_us2r$pred_med,out_us2r$pred_CI1,out_us2r$pred_CI2,scale_depart_us2[1],col1=colA,colf=colB)
+  out_us1r <- bootstrap_est(travel_incidence_n$dates[range1]-7,data_us1)
+  out_us2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_us2)
+  
+  
+  # plot_CI(travel_incidence_n$dates[range2],round(pos_counts_us)[range2], round(tests_us_s2)[range2])
+  # plot_CI(travel_incidence_n$dates[range1],round(pos_counts_us)[range1], round(tests_us_s1)[range1])
+  # plot_CI(travel_incidence_n$dates[range_lab],round(pos_counts_us_lab), tests_us_lab)
+  # 
+  # # Smoothing observed prevalence -  merge lab and COV-CHECK 2 data (both day 0)
+  # out_us1r <- plot_GAM(travel_incidence_n$dates[range1],pos_counts_us[range1],tests_us_s1[range1])
+  # out_us2r <- plot_GAM(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),
+  #                      c(round(pos_counts_us_lab),pos_counts_us[range2]),
+  #                      c(tests_us_lab,tests_us_s2[range2]))
+  # #out_us2r_only <- plot_GAM(c(travel_incidence_n$dates[range2]),c(pos_counts_us[range2]),c(tests_us_s2[range2])) # COV-CHECK 2 for antibody comparison
+  # 
+  # # Estimated prevalence
+  # plot_polygon(out_us1r$pred_date,out_us1r$pred_med,out_us1r$pred_CI1,out_us1r$pred_CI2,scale_depart_us1[1],col1=colA,colf=colB)
+  # plot_polygon(out_us2r$pred_date,out_us2r$pred_med,out_us2r$pred_CI1,out_us2r$pred_CI2,scale_depart_us2[1],col1=colA,colf=colB)
 
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
@@ -589,10 +598,13 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
   shift_s <- 17 # number of days to seroconvert
 
-  y_cinc <- cumul_CI(out_fr1r$sim_inc*scale_depart_fr1,cumulative=T)
-  x_date_p <- out_fr1r$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
+  y_cinc <- cumul_CI(out_fr1r$sim_inc,cumulative=T)
+  x_date_p <- out_fr1r$sim_date - mean_pcr + shift_s  # Shift to get incidence (mean PCR duration = 9 days)
   
   # Match to seroprevalence timings
+  date1 <- as.Date("2020-10-11")
+  date2 <- as.Date("2021-02-14")
+  
   d1 <- which.min(abs(x_date_p - as.Date("2020-10-11")))
   d2 <- which.min(abs(x_date_p - as.Date("2021-02-14")))
   
@@ -604,8 +616,8 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   plot(x_date_p,y_cinc$median,
        xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="cumulative % infected")
   grid(nx=NULL,ny=NA,col="light gray")
-  points(c(x_date_p[d1],x_date_p[d2]),c(sero1,sero2),pch=19)
-  lines(c(x_date_p[d1],x_date_p[d1]),c(6.9,11)); lines(c(x_date_p[d2],x_date_p[d2]),c(10.8,15.6))
+  points(c(date1,date2),c(sero1,sero2),pch=19)
+  lines(c(date1,date1),c(6.9,11)); lines(c(date2,date2),c(10.8,15.6))
   points(c(d3),sero3a,pch=17)
   points(c(d4),sero4a,pch=15)
 
@@ -624,10 +636,10 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # Print peak values for France and US in each wave:
-  
-  c.text(max(out_fr1r$pred_med*scale_depart_fr1),
-         max(out_fr1r$pred_CI2*scale_depart_fr1),
-         max(out_fr1r$pred_CI1*scale_depart_fr1)) %>% print()
+
+  c.text(max(out_fr1r$pred_med),
+         max(out_fr1r$pred_CI2),
+         max(out_fr1r$pred_CI1)) %>% print()
   
   c.text(max(out_fr2r$pred_med*scale_depart_fr2),
          max(out_fr2r$pred_CI2*scale_depart_fr2),
@@ -643,17 +655,17 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   
   # - - -
   # Match to US seroprevalence data 1
-  y_cinc <- cumul_CI(out_us1r$sim_inc*scale_depart_us1)
-  x_date_p <- out_us1r$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
+  y_cinc <- cumul_CI(out_us1r$sim_inc)
+  x_date_p <- out_us1r$sim_date - mean_pcr + shift_s # Shift to get incidence (mean PCR duration = 9 days)
 
-  d1 <- which.min(abs(x_date_p - as.Date("2020-07-15")))
+  d1 <- which.min(abs(x_date_p - as.Date("2020-07-27")))
   d2 <- length(x_date_p)
   
   sero1 <- 100*us_national_sero$mid[1] # Initial US national serosurvey estimate
   
   # Match to US seroprevalence data 2
-  y_cinc2 <- cumul_CI(out_us2r$sim_inc*scale_depart_us2)
-  x_date_p2 <- out_us2r$sim_date - 9 # Shift to get incidence (mean PCR duration = 9 days)
+  y_cinc2 <- cumul_CI(out_us2r$sim_inc)
+  x_date_p2 <- out_us2r$sim_date - mean_pcr # Shift to get incidence (mean PCR duration = 9 days)
 
   d1a <- which.min(abs(x_date_p2 - as.Date("2021-05-06")))
   d2a <- which.min(abs(x_date_p2 - as.Date("2022-02-11")))
@@ -688,7 +700,10 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
           col=colB,lty=0)
   lines(x_date_p2[d1a:d2a],(y_cinc2$median[d1a:d2a]-min(y_cinc2$median[d1a:d2a])+sero1a),col="red")
 
+  
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
+  
+  
   
   dev.copy(pdf,paste("plots/Fig4_estimates_",test_type,"_",btt,".pdf",sep=""),width=6,height=7)
   dev.off()
