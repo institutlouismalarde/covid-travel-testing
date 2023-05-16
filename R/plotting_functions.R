@@ -488,7 +488,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   pos_counts_fr[is.na(pos_counts_fr)] <- 0
   pos_counts_fr[is.na(pos_counts_fr)] <- 0
   
-  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="estimated departure prevalence (%)")
+  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="departure prevalence (%)")
   grid(nx=NULL,ny=NA,col="light gray")
   
   data_fr1 <- data.frame(pos=round(pos_counts_fr)[range1],num=round(tests_fr_s1)[range1])
@@ -523,9 +523,8 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
   
   x_text <- min(out_fr1r$pred_date)+20
-  text(x=x_text+5,y=7,labels="  Weekly raw proportion",col="black",adj=0)
-  text(x=x_text,y=6,labels="- Unadjusted GAM estimate",col="blue",adj=0)
-  text(x=x_text,y=5,labels="- Adjusted GAM estimate",col="red",adj=0)
+  text(x=x_text+5,y=7,labels="  Estimated prevalence",col="black",adj=0)
+  text(x=x_text,y=6,labels="- Smoothed GAM estimate",col="blue",adj=0)
   points(x=x_text,y=7,pch=19,cex=0.8)
   
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
@@ -638,20 +637,20 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   # Print peak values for France and US in each wave:
 
   c.text(max(out_fr1r$pred_med),
-         max(out_fr1r$pred_CI2),
-         max(out_fr1r$pred_CI1)) %>% print()
+         max(out_fr1r$pred_CI1),
+         max(out_fr1r$pred_CI2)) %>% print()
   
-  c.text(max(out_fr2r$pred_med*scale_depart_fr2),
-         max(out_fr2r$pred_CI2*scale_depart_fr2),
-         max(out_fr2r$pred_CI1*scale_depart_fr2)) %>% print()
+  c.text(max(out_fr2r$pred_med),
+         max(out_fr2r$pred_CI1),
+         max(out_fr2r$pred_CI2)) %>% print()
   
-  c.text(max(out_us1r$pred_med*scale_depart_us1),
-         max(out_us1r$pred_CI2*scale_depart_us1),
-         max(out_us1r$pred_CI1*scale_depart_us1)) %>% print()
+  c.text(max(out_us1r$pred_med),
+         max(out_us1r$pred_CI1),
+         max(out_us1r$pred_CI2)) %>% print()
   
-  c.text(max(out_us2r$pred_med*scale_depart_us2),
-         max(out_us2r$pred_CI2*scale_depart_us2),
-         max(out_us2r$pred_CI1*scale_depart_us2)) %>% print()
+  c.text(max(out_us2r$pred_med),
+         max(out_us2r$pred_CI1),
+         max(out_us2r$pred_CI2)) %>% print()
   
   # - - -
   # Match to US seroprevalence data 1

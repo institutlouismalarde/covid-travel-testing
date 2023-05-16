@@ -175,9 +175,9 @@ bootstrap_est <- function(dates,
   
   if(return_vals==T){
     list(pred_date=x_date,
-         pred_med=fitPlotP,
-         #pred_CI1=mult_v*CI1plotF,
-         #pred_CI2=mult_v*CI2plotF,
+         pred_med=store_gam,
+         pred_CI1=CI1plotF,
+         pred_CI2=CI2plotF,
          sim_date = as.Date(x_date),
          #sim_out = sims,
          sim_inc = sims_inc)
@@ -194,6 +194,7 @@ bootstrap_est <- function(dates,
 }
 
 # Plot GAM for dates ------------------------------------------------------
+# DEPRECATED?
 
 plot_GAM <- function(dates,x_val,n_val=NULL,return_vals=T,kk=NULL,family_f="binomial",col1="blue",colf = rgb(0,0,1,0.2)){
   # DEBUG   kk <- NULL; dates <- travel_incidence_n$dates[range1];family_f="binomial"; col1="blue"; colf = rgb(0,0,1,0.2); x_val <- pos_counts_fr[range1]; n_val <- tests_fr_s1[range1]
