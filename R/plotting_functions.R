@@ -517,11 +517,11 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
   
   # Estimated prevalence
-  # colA <- "red"; colB <- rgb(1,0,0,0.1)
+  # 
   # plot_polygon(out_fr1r$pred_date,out_fr1r$pred_med,out_fr1r$pred_CI1,out_fr1r$pred_CI2,scale_depart_fr1[1],col1=colA,colf=colB)
   # plot_polygon(out_fr2r$pred_date,out_fr2r$pred_med,out_fr2r$pred_CI1,out_fr2r$pred_CI2,scale_depart_fr2[1],col1=colA,colf=colB)
 
-  
+  colA <- "red"; colB <- rgb(1,0,0,0.1)
   x_text <- min(out_fr1r$pred_date)+20
   text(x=x_text+5,y=7,labels="  Estimated prevalence",col="black",adj=0)
   text(x=x_text,y=6,labels="- Smoothed GAM estimate",col="blue",adj=0)
@@ -534,7 +534,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   pos_counts_us[is.na(pos_counts_us)] <- 0
   pos_counts_us[is.na(pos_counts_us)] <- 0
   
-  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="estimated departure prevalence (%)")
+  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="departure prevalence (%)")
   grid(nx=NULL,ny=NA,col="light gray")
   
   # Observed prevalence
@@ -596,6 +596,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   # Match to France seroprevalence data 1
 
   shift_s <- 17 # number of days to seroconvert
+  mean_pcr <- round(sum((0:30)*p_by_day$median/sum(p_by_day$median))) # mean PCR duration
 
   y_cinc <- cumul_CI(out_fr1r$sim_inc,cumulative=T)
   x_date_p <- out_fr1r$sim_date - mean_pcr + shift_s  # Shift to get incidence (mean PCR duration = 9 days)
