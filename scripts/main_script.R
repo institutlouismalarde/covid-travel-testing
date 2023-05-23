@@ -16,6 +16,10 @@ library(gratia)
 library(MASS)
 library(data.table)
 
+# Load library for highest posterior density interval calculation
+devtools::install_github("rmcelreath/rethinking@slim")
+library(rethinking)
+
 # Set working directory
 # setwd("~/Documents/GitHub/covid-travel-testing/")
 

@@ -174,17 +174,25 @@ figure_phase_bias <- function(btt=3,att=4){
     n_travellers <- 100
     plot(-x_labels,n_travellers*p_all$p_shift,type="l",xlim=c(min(-x_labels),att+1),ylim=c(0,n_travellers/10),xaxs="i",yaxs="i",
          col="white",xlab="day of infection relative to arrival",ylab="infected travellers",main=growth_label[kk])
-    lines(-x_labels,n_travellers*p_all$out_raw_depart,col="red")
-    lines(-x_labels,n_travellers*p_all$out_raw_arrive,col="orange")
-  
+    # lines(-x_labels,n_travellers*p_all$out_raw_depart,col="red")
+    # lines(-x_labels,n_travellers*p_all$out_raw_arrive,col="orange")
+    # 
     polygon(c(-x_labels,rev(-x_labels)),n_travellers*c(0*p_all$p_shift,rev(p_all$p_shift)),col=col_green,lty=0)
     polygon(c(-x_labels,rev(-x_labels)),n_travellers*c(0*p_all$out_raw_depart,rev(p_all$out_raw_depart)),col=col_red,lty=0)
     polygon(c(-x_labels,rev(-x_labels)),n_travellers*c(0*p_all$out_raw_arrive,rev(p_all$out_raw_arrive)),col=col_green2,lty=0)
 
+    
     lines(-x_labels,n_travellers*p_all$p_shift,col="black",lwd=2)
     lines(-c(btt,btt),c(-10,1e3),lty=2) # minus 1 to set range = 0:2
     lines(c(att,att),c(-10,1e3),lty=2) # minus 1 to set range = 0:2
     lines(c(0,0),c(-10,1e3),col="light grey",lwd=2) # Arrival time
+    
+    if(kk==2){
+      text(x=-28,y=1,labels="missed",adj=0,col="dark red")
+      text(x=-17,y=2.4,labels="departure",adj=0,col="dark green")
+      text(x=-5,y=0.7,labels="arrival",adj=0,col="dark green")
+    }
+
     
     title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
     
@@ -337,7 +345,7 @@ figure_basic_data <- function() {
   case_1_ba1 <- as.Date("2021-12-12")
   case_1_ba2 <- as.Date("2022-01-14")
   
-  arrows(case_1_cc,y_arrow,case_1_cc,0,angle=30,length=0.07,col="red"); text(x=case_1_cc,y=1.2*y_arrow,labels="WT",col="red")
+  arrows(case_1_cc,y_arrow,case_1_cc,0,angle=30,length=0.07,col="red"); text(x=case_1_cc,y=1.2*y_arrow,labels="Wildtype",col="red")
   arrows(case_1_alpha,y_arrow,case_1_alpha,0,angle=30,length=0.07,col="red"); text(x=case_1_alpha,y=1.2*y_arrow,labels="Alpha",col="red")
   arrows(case_1_delta,y_arrow,case_1_delta,0,angle=30,length=0.07,col="red"); text(x=case_1_delta,y=1.2*y_arrow,labels="Delta",col="red")
   arrows(case_1_ba1,y_arrow,case_1_ba1,0,angle=30,length=0.07,col="red"); text(x=case_1_ba1,y=1.2*y_arrow,labels="Omicron",col="red")
@@ -521,7 +529,8 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   # plot_polygon(out_fr1r$pred_date,out_fr1r$pred_med,out_fr1r$pred_CI1,out_fr1r$pred_CI2,scale_depart_fr1[1],col1=colA,colf=colB)
   # plot_polygon(out_fr2r$pred_date,out_fr2r$pred_med,out_fr2r$pred_CI1,out_fr2r$pred_CI2,scale_depart_fr2[1],col1=colA,colf=colB)
 
-  colA <- "red"; colB <- rgb(1,0,0,0.1)
+  colA <- "red"; colB <-rgb(0,0,1,0.2) # rgb(1,0,0,0.1) colf = 
+  
   x_text <- min(out_fr1r$pred_date)+20
   text(x=x_text+5,y=7,labels="  Estimated prevalence",col="black",adj=0)
   text(x=x_text,y=6,labels="- Smoothed GAM estimate",col="blue",adj=0)
@@ -626,11 +635,16 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
           c((y_cinc$lower[d1:d2]-min(y_cinc$lower[d1:d2])+sero1),
             rev((y_cinc$upper[d1:d2]-min(y_cinc$upper[d1:d2])+sero1)) ),
           col=colB,lty=0)
-  lines(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2])+sero1),col="red")
+  lines(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2])+sero1),col="blue")
   
+  # Plot cases and comparison
+  cumsum_fr <- cumsum(coalesce(fr_cases_ma, 0)) + fr_cases_ma*0
+  lines(fr_cases$date,100*cumsum_fr/fr_pop,col="orange")
+
   x_text <- min(out_fr1r$pred_date)+20
   text(x=x_text+5,y=60,labels="  Domestic seroprevalence surveys",col="black",adj=0)
-  text(x=x_text,y=50,labels="- Estimated from FP arrivals",col="red",adj=0)
+  text(x=x_text,y=50,labels="- Estimated from FP arrivals",col="blue",adj=0)
+  text(x=x_text,y=50,labels="- Cumulative domestic cases",col="gray",adj=0)
   points(x=x_text,y=60,pch=19,cex=0.8)
   
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
@@ -691,15 +705,20 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
           c((y_cinc$lower[d1:d2]-min(y_cinc$lower[d1:d2])+sero1),
             rev((y_cinc$upper[d1:d2]-min(y_cinc$upper[d1:d2])+sero1)) ),
           col=colB,lty=0)
-  lines(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2])+sero1),col="red")
+  lines(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2])+sero1),col="blue")
   
   # Plot estimates for second wave
   polygon(c(x_date_p2[d1a:d2a],rev(x_date_p2[d1a:d2a])),
           c((y_cinc2$lower[d1a:d2a]-min(y_cinc2$lower[d1a:d2a])+sero1a),
             rev((y_cinc2$upper[d1a:d2a]-min(y_cinc2$upper[d1a:d2a]))+sero1a) ),
           col=colB,lty=0)
-  lines(x_date_p2[d1a:d2a],(y_cinc2$median[d1a:d2a]-min(y_cinc2$median[d1a:d2a])+sero1a),col="red")
+  lines(x_date_p2[d1a:d2a],(y_cinc2$median[d1a:d2a]-min(y_cinc2$median[d1a:d2a])+sero1a),col="blue")
 
+  
+  # Plot cases and comparison
+  cumsum_us <- cumsum(coalesce(us_cases_ma, 0)) + us_cases_ma*0
+  lines(us_cases$date,100*cumsum_us/us_pop,col="gray")
+  
   
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   

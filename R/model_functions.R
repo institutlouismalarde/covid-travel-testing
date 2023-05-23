@@ -105,7 +105,7 @@ bootstrap_est <- function(dates,
                           col1="blue",
                           colf = rgb(0,0,1,0.2)){
   
-  # DEBUG bootstrap_n=1e2; kk=NULL;data_input=data_fr1; dates=travel_incidence_n$dates[range1];col1="blue"; colf = rgb(0,0,1,0.2);
+  # DEBUG before_travel_test=3; after_arrival_test=4; bootstrap_n=1e2; kk=NULL;data_input=data_fr1; dates=travel_incidence_n$dates[range1];col1="blue"; colf = rgb(0,0,1,0.2);
 
   # Format dates and remove data points with no tests
   n_test <- data_input[,2]
@@ -152,17 +152,18 @@ bootstrap_est <- function(dates,
   CI2plotF <- model1$family$linkinv(upperCI)
   CI1plotF <- pmax(0,CI1plotF) # constrain to be positive
 
-  # Calculate 95% credible interval for parameter
-  sim_95 <- apply(mult_v*store_sim,1,function(x){quantile(x,c(0.025,0.5,0.975))}) %>% t()
+  # Calculate 95% HPDI for parameter
+  sim_95 <- apply(mult_v*store_sim,1,function(x){rethinking::HPDI(x,prob=0.95)}) %>% t()
   CI1plotP <- sim_95[,1]
-  fitPlotP <- sim_95[,2]
-  CI2plotP <- sim_95[,3]
+  #fitPlotP <- sim_95[,2]
+  CI2plotP <- sim_95[,2]
+  
 
   # Plot curves and output estimates from posterior
   x_date2 <- as.Date(x_date_range)
   
   #plot(x_date,prev_store[,1]) # XX DEBUG - REMOVE LATER XX
-  plot_CI_def(x_date,cbind(prev_store[,1],CI1plotP,CI2plotP))
+  plot_CI_def(x_date,cbind(prev_store[,1],CI1plotP,CI2plotP)) # Use MAP and HDPI
   polygon(c(x_date2,rev(x_date2)),(c(CI1plotF,rev(CI2plotF))),col=colf,lty=0)
   lines(x_date2, (store_gam) ,col=col1,lwd=2)
   
