@@ -33,8 +33,8 @@ source("R/plotting_functions.R")
 # Figure 1
 figure_schematic_testing(after_arrival_test=4)
 
-# Figure 2
-figure_phase_bias(btt=2,att=4) # Defined with before and after travel test days
+# Figure 2 + Figure S1
+figure_phase_bias(btt=3,att=4) # Defined with before and after travel test days
 
 # Figure 3
 figure_basic_data()
@@ -43,7 +43,7 @@ figure_basic_data()
 figure_reconstruct_epidemics()
 
 # Figure S1 - antigen test 1 day before travel (+ 1 day in transit)
-figure_reconstruct_epidemics(test_type="Antigen",btt=2)
+figure_reconstruct_epidemics(test_type2="Antigen",btt=2)
 
 # Figure S2
 figure_explore_cumulative_incidence()

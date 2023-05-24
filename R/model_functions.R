@@ -22,6 +22,18 @@ plot_CI <- function(dates,xx,nn,colA="black") {
   
 }
 
+
+# Grid lines by year ------------------------------------------------------
+
+grid_year <- function(){
+  y1 <- as.Date("2021-01-01")
+  y2 <- as.Date("2022-01-01")
+  
+  lines(c(y1,y1),c(0,1e6),lty=3,col="light gray")
+  lines(c(y2,y2),c(0,1e6),lty=3,col="light gray")
+  
+}
+
 # Plot data and binom CI --------------------------------------------------
 
 plot_CI_def <- function(dates,data_in,colA="black") {
@@ -51,7 +63,8 @@ c.text<-function(x1,x2,x3,sigF=2){
 prev_estimate <- function(data_in, 
                           before_travel_test=3, # 
                           after_arrival_test=4,
-                          sim_out_n = 100# 
+                          test_type="PCR",
+                          sim_out_n = 1e2 # 
                           ){
   
   # before_travel_test=3; after_arrival_test=4; sim_out_n=100
@@ -61,12 +74,19 @@ prev_estimate <- function(data_in,
 
   # Calculate detection proportion at arrival
   n_depart_N <- nrow(p_by_day)
-  output_n_det <- delay_test(n_depart_N,before_travel_test,after_arrival_test)$n_arrive_detect; output_n_det <- output_n_det[output_n_det>0]
+  output_n_det <- delay_test(n_depart_N,before_travel_test,after_arrival_test,dep_test=test_type)$n_arrive_detect; output_n_det <- output_n_det[output_n_det>0]
   
   # Define probabilities
-  p_n1_p2 <- sum(output_n_det)/n_depart_N   # P(negative at departure | infected)
-  p_n1 <- sum(1-p_by_day$median)/n_depart_N   # P(negative at departure & positive at arrival | infected)
+  p_n1_p2 <- sum(output_n_det)/n_depart_N # P(negative at departure & positive at arrival | infected)
   
+  # Check whether use PCR or LFT distribution for departure
+  if(test_type=="PCR"){
+    p_n1 <- sum(1-p_by_day$median)/n_depart_N   # P(negative at departure | infected)
+  }else{
+    p_n1 <- sum(1-l_by_day$median)/n_depart_N   # P(negative at departure | infected)
+  }
+  p_n1_pcr <- sum(1-p_by_day$median)/n_depart_N   # Define PCR for prevalence
+
   # Calculate profile likelihood for w (i.e. probability of infection at departure)
   xx_search <- seq(0,1,0.0001)
   likelihood_f <- function(w){dbinom(y,x,w*p_n1_p2/(w*p_n1+(1-w)),log=T)}
@@ -75,7 +95,8 @@ prev_estimate <- function(data_in,
   # Extract MLE and 95% CI:
   mle_est <- y/(x*p_n1_p2 + y - y*p_n1) #xx_search[which.max(yy_out)]
   prof_lik <- xx_search[(max(pp_out)-pp_out)<qchisq(0.95,1)/2]
-  prev_est <- 100*c(mle_est,min(prof_lik),max(prof_lik))*(1-p_n1) # convert back into probability test positive)
+  
+  prev_est <- 100*c(mle_est,min(prof_lik),max(prof_lik))*(1-p_n1_pcr) # convert back into probability test positive)
 
   posterior_p <- exp(pp_out)/sum(exp(pp_out)) # Define posterior of p (assuming uniform prior)
   
@@ -83,7 +104,7 @@ prev_estimate <- function(data_in,
   mean_p <- sum(xx_search*posterior_p)
   variance_p <- sum((xx_search-mean_p)^2*posterior_p) # Define variance of p
                                  
-  sim_out <- sample(xx_search,sim_out_n,prob = posterior_p,replace=T)*(1-p_n1) # convert back into probability test positive)
+  sim_out <- sample(xx_search,sim_out_n,prob = posterior_p,replace=T)*(1-p_n1_pcr) # convert back into probability test positive)
 
   list(prev_est=prev_est,
        map_est=mle_est,
@@ -96,12 +117,13 @@ prev_estimate <- function(data_in,
 
 bootstrap_est <- function(dates,
                           data_input, # First column positives at arrival, second column tests
-                          n_val=NULL,
                           return_vals=T,
                           bootstrap_n=1e3,
                           before_travel_test=3,
                           after_arrival_test=4,
+                          test_type="PCR",
                           kk=NULL,
+                          gam_add=T,
                           col1="blue",
                           colf = rgb(0,0,1,0.2)){
   
@@ -109,7 +131,8 @@ bootstrap_est <- function(dates,
 
   # Format dates and remove data points with no tests
   n_test <- data_input[,2]
-  x_date <- ymd(dates)
+  x_date <- dates
+  if(class(x_date)=="Date"){x_date <- ymd(dates)}
   x_date <- as.numeric(x_date)
   
   valid_x <- (!is.na(n_test) & n_test>1)  # Remove NA entries
@@ -122,7 +145,7 @@ bootstrap_est <- function(dates,
   
   # Simulate prevalence from posterior for each time poinnt
   for(ii in 1:length(x_date)){
-    est_vals <- prev_estimate(data_in[ii,],before_travel_test,after_arrival_test,sim_out_n=bootstrap_n)
+    est_vals <- prev_estimate(data_in[ii,],before_travel_test,after_arrival_test,test_type,sim_out_n=bootstrap_n)
     sim_ii <- est_vals$sim_out # simulated values
     store_sim[ii,] <- sim_ii
     prev_store[ii,] <- c(est_vals$prev_est,est_vals$var_est)
@@ -164,8 +187,12 @@ bootstrap_est <- function(dates,
   
   #plot(x_date,prev_store[,1]) # XX DEBUG - REMOVE LATER XX
   plot_CI_def(x_date,cbind(prev_store[,1],CI1plotP,CI2plotP)) # Use MAP and HDPI
-  polygon(c(x_date2,rev(x_date2)),(c(CI1plotF,rev(CI2plotF))),col=colf,lty=0)
-  lines(x_date2, (store_gam) ,col=col1,lwd=2)
+  
+  # Overlay GAM of fitted points
+  if(gam_add==T){
+    polygon(c(x_date2,rev(x_date2)),(c(CI1plotF,rev(CI2plotF))),col=colf,lty=0)
+    lines(x_date2, (store_gam) ,col=col1,lwd=2)
+  }
   
   # Simulate incidence from bootstrap prevalence estimates
   sims <- simulate(model1, nsim = 1e3, seed = 42); sims[sims<0] <- 0 # truncate
@@ -179,6 +206,9 @@ bootstrap_est <- function(dates,
          pred_med=store_gam,
          pred_CI1=CI1plotF,
          pred_CI2=CI2plotF,
+         out_MAP = prev_store[,1],
+         HDPI_1 = CI1plotP,
+         HDPI_2 = CI2plotP,
          sim_date = as.Date(x_date),
          #sim_out = sims,
          sim_inc = sims_inc)
@@ -199,10 +229,12 @@ bootstrap_est <- function(dates,
 
 plot_GAM <- function(dates,x_val,n_val=NULL,return_vals=T,kk=NULL,family_f="binomial",col1="blue",colf = rgb(0,0,1,0.2)){
   # DEBUG   kk <- NULL; dates <- travel_incidence_n$dates[range1];family_f="binomial"; col1="blue"; colf = rgb(0,0,1,0.2); x_val <- pos_counts_fr[range1]; n_val <- tests_fr_s1[range1]
-
+  # DEBUG dates = x_weeks; x_val=prev_pos_dep[w_s]; n_val=rep(n_travel_daily,length(w_s))
+  
+  
   if(family_f=="binomial"){
     input <- data.frame(date = dates,vals = x_val,n = round(n_val) )
-    input$date <- ymd(input$dat)
+    if(class(input$date)=="Date"){input$date <- ymd(input$dat)}
     input$date <- as.numeric(input$dat)
     input <- input[!is.na(input$n) & input$n>0,] # Remove NA entries
     
@@ -431,8 +463,7 @@ simulate_prev <- function(n_incidence, # Time series of daily departing infectio
     }
 
     arrive_cut <- length(out_arrive_delay) # Adjust for censoring at start of time series
-    
-    # XX REFACTOR TO INCLUDE DENOMINATORS IN BINOMIAL
+
     # Shift to match day of departure and arrival test prevalence in timeseries
     if(ii<(n_max-aat+1)){
       prev_tested_arr[ii+aat] <- sum(negative_dep_ii)/sum((prop_incidence)[pick_window]) # Proportion tested at arrival
@@ -451,7 +482,140 @@ simulate_prev <- function(n_incidence, # Time series of daily departing infectio
   
 }
 
-# Back calculation function -----------------------------------------------
+
+# Simulate and recover arrival test data ----------------------------------------------
+
+# Predict PCR positivity distribution on arrival
+stochastic_arrival <- function( n_incidence, # Time series of daily departing infections
+                                btt = 3, # Test 1: days pre-departure
+                                att = 4, # Test 1: days pre-departure
+                                n_max, # Number of time points
+                                n_travel_vol = 2000 ,# Number of weekly travellers
+                                test_type="PCR",
+                                test_type_infer="PCR",
+                                col_list_in = col_list2[[2]],
+                                add_gam = F
+                                ){
+                                
+  # DEBUG n_incidence = 0.2*dnorm(x_days,mean=50,sd=22) ; btt=3; att=4; n_max=150; test_type="PCR"; test_type_infer="PCR"
+  
+  
+  # Set seed for simulations
+  set.seed(10)
+  
+  # Set up variables and lengths
+  max_d <- 30 # PCR positivity max days in calc (includes 0)
+  n_travellers <- rep(n_travel_vol,n_max)
+  
+  prop_incidence <- n_incidence # Proportion infected on given day
+  
+  n_depart_N <- nrow(p_by_day)   # Total days in PCR curve
+
+  #prev_depart <- rep(0,n_max) 
+
+  # XX NEED TO ACCOUNT FOR EPIDEMIC PHASE HERE...
+  
+  # Rolling window tallying up incidence
+  # for(ii in 1:n_max){
+  #   calc_window <- ii:min(n_max,ii+max_d) # Window to calculate prevalence
+  #   prev_ii <- prop_incidence[ii]*p_by_day$median # Use median
+  #   prev_ii_cut <- prev_ii[1:min(max_d+1,(n_max-ii+1))] # Avoid overrunning end of time series
+  #   prev_depart[calc_window] <- prev_depart[calc_window] + prev_ii_cut # Match to length
+  #   
+  # }
+  
+  # Define variables for positives and number tested:
+  prev_negative_dep <- rep(0,n_max)
+  prev_pos_dep <- rep(0,n_max)
+  prev_positive_arr <- rep(0,n_max)
+  prev_tested_arr <- rep(0,n_max)
+  e_pos_dep <- rep(0,n_max)
+  
+  # Define departure distribution
+  if(test_type=="PCR"){
+    neg_test <- p_by_day$p_neg # Probability missed at departure given test before
+    neg_depart <- c(rep(1,btt),head(neg_test,-btt)) # Probability missed at departure given test before
+    neg_dist <- neg_depart # Distribution over days since infection in testing
+  }
+  
+  # Calculate proportion arriving based on incidence
+  for(ii in 1:n_max){ # Iterate over day of arrival
+    pick_window <- max(ii-max_d,1):ii # Incidence values to use
+    calc_window <- 1:(min(max_d+1,ii)) # Window of test values to use
+    n_window <- length(calc_window)
+    
+    # Tally up those who would test negative at departure
+    #n_travel_d <- round(n_travel_vol/(max_d+1)) # Distribute over possible infection days
+    
+    n_inf <- rbinom(n_window,n_travel_vol,rev((prop_incidence)[pick_window])) # Number infected at departure based on recent incidence
+    
+    negative_dep_ii <- rbinom(n_window,n_inf,neg_dist[calc_window]) # Negative at departure by time of incidence
+    positive_dep_ii <- sum(n_inf - negative_dep_ii)
+    
+    # Expected positives if tested at departure - use 'neg_test' here as no shift
+    departure_e_pos <- n_travel_vol*rev((prop_incidence)[pick_window])*(1-neg_test[calc_window]) # Prevalence at departure test (rather than at departure with btt lag)
+    e_pos_dep[ii] <- sum(departure_e_pos)
+    
+    # Tally positives and negatives at departure
+    prev_negative_dep[ii] <- sum(negative_dep_ii)
+    prev_pos_dep[ii] <- sum(positive_dep_ii)
+    
+    # Arrival detect:
+    if(att==0){
+      out_arrive_delay <- negative_dep_ii # Probability missed at arrival on day X
+    }else{
+      out_arrive_delay <- c(rep(0,att),head(negative_dep_ii,-att)) # Probability missed at arrival on day X
+    }
+    
+    arrive_cut <- length(out_arrive_delay) # Adjust for censoring at start of time series
+    
+    # XX REFACTOR TO INCLUDE DENOMINATORS IN BINOMIAL
+    # Shift to match day of departure and arrival test prevalence in timeseries
+    # Note burn in if testing after day 0 arrival
+    if(ii<(n_max-att+1)){
+      prev_tested_arr[ii+att] <- n_travel_vol - sum(positive_dep_ii) # Number tested at arrival
+      prev_positive_arr[ii+att] <- sum(rbinom(arrive_cut,out_arrive_delay,p_by_day$median[1:arrive_cut])) # Detected at arrival
+    }
+    
+  }
+  
+  # XX DEBUG
+  # Plot by week
+  plot(x_weeks,100*(e_pos_dep/n_travel_vol)[w_s],type="l",ylab="%",col="white",ylim=c(0,4),yaxs="i",xlab="days",main="")
+
+  data_week <- data.frame(prev_positive_arr,prev_tested_arr); data_week <- data_week[w_s,]
+  
+  # Estimate prevalence (assume baseline 3 day pre arrival and 4 day post)
+  est_prev <- bootstrap_est(dates=x_weeks, data_input=data_week,gam_add=add_gam,
+                            before_travel_test=3,after_arrival_test=4,test_type=test_type_infer)
+
+  points(x_weeks,100*(e_pos_dep/n_travel_vol)[w_s],lwd=2,col=col_list_in) # Expected prevalence
+  
+  points(x_weeks,100*prev_positive_arr[w_s]/prev_tested_arr[w_s],col=col_list_in,pch=0) # Prevalence at arrival
+  
+  # Plot GAM comparison on original data with larger sample size:
+  if(add_gam==T){
+    plot_GAM(x_weeks,round(e_pos_dep[w_s]),rep(n_travel_vol,length(w_s)),
+             return_vals=T,kk=NULL,family_f="binomial",col1="orange",colf = rgb(1,0.5,0,0.2))
+  }
+
+  
+  # correlation
+  # break_n <- seq(-5.25,5.25,0.5)
+  # hist(100*tail(prev_pos_dep,-4)/n_travel_vol-est_prev$out_MAP,breaks=break_n)
+
+
+  list(in_incidence=prop_incidence,
+       out_test_depart = n_travel_vol,
+       out_pos_depart = prev_pos_dep,
+       out_test_arrive = prev_tested_arr,
+       out_pos_arrive=prev_positive_arr
+  )
+  
+  
+}
+
+# Back calculation function (deprecated) -----------------------------------------------
 
 estimate_vals <- function(n_detect,
                           before_travel_test=3,

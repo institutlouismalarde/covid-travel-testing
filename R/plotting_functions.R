@@ -189,8 +189,8 @@ figure_phase_bias <- function(btt=3,att=4){
     
     if(kk==2){
       text(x=-28,y=1,labels="missed",adj=0,col="dark red")
-      text(x=-17,y=2.4,labels="departure",adj=0,col="dark green")
-      text(x=-5,y=0.7,labels="arrival",adj=0,col="dark green")
+      text(x=-17,y=2.6,labels="departure test",adj=0,col="dark green")
+      text(x=-5,y=0.7,labels="arrival test",adj=0,col="dark green")
     }
 
     
@@ -207,13 +207,12 @@ figure_phase_bias <- function(btt=3,att=4){
   x_weeks <- x_days[w_s]
   
   col_list1 <- list("dark orange","purple","gold")
-  col_list2 <- list("dark blue","dark cyan","blue")
+  col_list2 <- list("dark orange","dark cyan","purple")
   
   for(ii in 1:3){
     # Define incidence curves
     if(ii==1){
       prop_incidence1 <- 0.2*dnorm(x_days,mean=50,sd=22) # Proportion infected per day
-      prop_incidence2 <-  0.15*dnorm(x_days,mean=120,sd=30) # Proportion infected per day
     }
     
     if(ii==2){
@@ -222,60 +221,65 @@ figure_phase_bias <- function(btt=3,att=4){
       prop_incidence1<- rep(0,n_max)
       prop_incidence1[1:cut_sim] <- peak_sim*exp(a1*(1:cut_sim))/max(exp(a1*(1:cut_sim)))
       prop_incidence1[(cut_sim+1):n_max] <- peak_sim*exp(-a1*((cut_sim+1):n_max))/max(exp(-a1*((cut_sim+1):n_max)))
-      
-      prop_incidence2<- rep(0,n_max)
-      prop_incidence2[1:cut_sim2] <- peak_sim2*exp(a1*(1:cut_sim2))/max(exp(a1*(1:cut_sim2)))
-      prop_incidence2[(cut_sim2+1):n_max] <- peak_sim2*exp(-a1*((cut_sim2+1):n_max))/max(exp(-a1*((cut_sim2+1):n_max)))
-      
     }
     
     if(ii==3){
-      peak_sim <- 0.0035; peak_sim2 <- 0.001; cut_sim <- 50; cut_sim2 <- 120
+      peak_sim <- 0.003; peak_sim2 <- 0.001; cut_sim <- 50; cut_sim2 <- 120
       prop_incidence1<- rep(0,n_max)
       prop_incidence1[(cut_sim+1):n_max] <- peak_sim
-      prop_incidence2<- rep(0,n_max)
-      prop_incidence2[1:cut_sim2] <- peak_sim2
     }
   
     
     btt1 <- 1; aat1 <- 0; # Scenario 1
     btt2 <- 3; aat2 <- 4; # Scenario 2
     
-    # Simulate datasets
-    out1_0 <- simulate_prev(prop_incidence1,btt=btt1,aat=aat1,n_max) # Scenario 1
-    out2_0 <- simulate_prev(prop_incidence2,btt=btt1,aat=aat1,n_max) # Scenario 1
-    out1_4 <- simulate_prev(prop_incidence1,btt=btt2,aat=aat2,n_max) # Scenario 2
-    out2_4 <- simulate_prev(prop_incidence2,btt=btt2,aat=aat2,n_max) # Scenario 2
+    # Simulate and recover dynamics
+    stochastic_arrival(prop_incidence1,btt = btt2,att = aat2,n_max,n_travel_vol = 5000,test_type="PCR",
+                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = F)
     
-    scale_0 <- estimate_vals(1,daily_growth=0,before_travel_test = btt1, after_arrival_test=aat1,dep_test = "PCR")$ratio_total
-    scale_4 <- estimate_vals(1,daily_growth=0,before_travel_test = btt2, after_arrival_test=aat2,dep_test = "PCR")$ratio_total
-  
-    est_dep_1_0 <- out1_0$out_pos_arrive[w_s]*scale_0
-    est_dep_2_0 <- out2_0$out_pos_arrive[w_s]*scale_0
-    est_dep_1_4 <- out1_4$out_pos_arrive[w_s]*scale_4
-    est_dep_2_4 <- out2_4$out_pos_arrive[w_s]*scale_4
-    
-    # Plot incidence for scenario 1
-    ymax <- 3.5
-    plot(100*out1_0$out_pos_depart,type="l",ylab="%",col="white",ylim=c(0,ymax),yaxs="i",xlab="days",main="")
-    grid(nx=NULL,ny=NA,col="light gray")
-    points(x_weeks,100*out1_0$out_pos_depart[w_s],col=col_list1[[ii]],pch=19)
-    points(x_weeks,100*out2_0$out_pos_depart[w_s],col=col_list2[[ii]],pch=19)
-    
-    points(x_weeks,100*out1_0$out_pos_arrive[w_s],col=col_list1[[ii]],pch=0) # squares
-    points(x_weeks,100*out2_0$out_pos_arrive[w_s],col=col_list2[[ii]],pch=0)
-    
-    points(x_weeks,100*out1_4$out_pos_arrive[w_s],col=col_list1[[ii]],pch=2) # triangles
-    points(x_weeks,100*out2_4$out_pos_arrive[w_s],col=col_list2[[ii]],pch=2)
-    
-    lines(x_weeks,100*est_dep_1_0,col=col_list1[[ii]],lwd=1);   lines(x_weeks,100*est_dep_1_4,col=col_list1[[ii]],lwd=1,lty=2)
-    lines(x_weeks,100*est_dep_2_0,col=col_list2[[ii]],lwd=1);   lines(x_weeks,100*est_dep_2_4,col=col_list2[[ii]],lwd=1,lty=2)
     title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   }
   
   dev.copy(pdf,paste("plots/Fig2_phase_bias.pdf",sep=""),width=8,height=5)
   dev.off()
+  
+  # - - - 
+  # Plot Figure S2 with more scenarios:
+  
+  par(mfcol=c(3,2),mgp=c(2,0.7,0),mar = c(3,3,1,1))
+  letter_x <- 1
+  
+  title_label <- c("2d pre + 4d post","2d + 0d") #,"2d + 4d (antigen)")
+  
+  for(ii in 1:2){
+    for(kk in 1:3){
+    # Define incidence curves
+    prop_incidence1 <- 0.2*dnorm(x_days,mean=50,sd=22) # Proportion infected per day
+    
+    if(ii==1){btt2 <- 3; aat2 <- 4} # Scenario 2
+    if(ii==2 | ii==3){btt2 <- 1; aat2 <-0}; # Scenario 1
+    #if(ii==3){test_inf <- "Antigen"}else{test_inf <- "PCR"}
+      
+    if(kk==1){travel_n=1000}
+    if(kk==2){travel_n=5000}
+    if(kk==3){travel_n=20000}
+    
+    # Simulate and recover dynamics
+    stochastic_arrival(prop_incidence1,btt = btt2,att = aat2,n_max,n_travel_vol = travel_n,test_type="PCR",
+                       test_type_infer=test_inf,col_list_in = col_list2[[ii]], add_gam = F)
+    text(x=100,y=3.5,adj=0,labels=paste0("n=",travel_n))
+    
+    title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
+    
+    if(kk==1){title(main=title_label[ii],adj=0.5)}
+    
+    }
+  }
+  
+  dev.copy(pdf,paste("plots/FigS1_phase_bias.pdf",sep=""),width=8,height=5)
+  dev.off()
+  
   
 }
 
@@ -299,7 +303,7 @@ figure_basic_data <- function() {
   plot(travel_incidence_n$dates,rowSums(travel_incidence_n[,c("NON","OUI")]),
        xlim=xlim_v,ylim=c(0,7000),yaxs="i",col="white",xlab="2020/21",ylab="weekly tests",type="l",lwd=2)
   
-  grid(nx=NULL,ny=0,col="light gray")
+  grid_year()
 
   polygon(c(covd1[1],covd1_q[2],covd1_q[2],covd1[1]),c(0,0,1e5,1e5),col=rgb(0,0,1,0.1),lty=0)
   polygon(c(labd[1],covd2[2],covd2[2],labd[1]),c(0,0,1e5,1e5),col=rgb(0,1,1,0.1),lty=0)
@@ -321,7 +325,7 @@ figure_basic_data <- function() {
   # Plot positives
   plot(ymd(travel_incidence_n$dates),100*travel_incidence_n$OUI/rowSums(travel_incidence_n[,c("OUI","NON")]),
        xlim=ymd(xlim_v),ylim=c(0,5),col="white",yaxs="i",xlab="2020/21",ylab="% positive")
-  grid(nx=NULL,ny=0,col="light gray")
+  grid_year()
   
   plot_CI(travel_incidence_n$dates,travel_incidence_n$OUI,rowSums(travel_incidence_n[,c("NON","OUI")]))
   
@@ -336,7 +340,7 @@ figure_basic_data <- function() {
   # - - -
   # Case data
   plot(fp_cases$date,fp_cases$new_cases,col="white",yaxs="i",type="l",ylim=c(0,8000),ylab="weekly cases in FP", xlim=xlim_v,lwd=2)
-  grid(nx=NULL,ny=NA,col="light gray")
+  grid_year()
   lines(fp_cases$date,fp_cases$new_cases,lwd=2)
   
   case_1_wt <- as.Date("2020-03-09");   case_1_cc <- as.Date("2020-07-27")
@@ -424,7 +428,7 @@ figure_basic_data <- function() {
 
 # Figure 4: Reconstruct epidemics -----------------------------------------------
 
-figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
+figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3){
   
   # DEBUG test_type="PCR"; btt=3
 
@@ -497,14 +501,14 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   pos_counts_fr[is.na(pos_counts_fr)] <- 0
   
   plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="departure prevalence (%)")
-  grid(nx=NULL,ny=NA,col="light gray")
+  grid_year()
   
   data_fr1 <- data.frame(pos=round(pos_counts_fr)[range1],num=round(tests_fr_s1)[range1])
   data_fr2 <- data.frame(pos=round(c(pos_counts_fr_lab,pos_counts_fr[range2])),num=c(tests_fr_lab,tests_fr_s2[range2]))
   
   # Include shift to get estimate at departure
-  out_fr1r <- bootstrap_est(travel_incidence_n$dates[range1]-7,data_fr1)
-  out_fr2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_fr2,after_arrival_test=0)
+  out_fr1r <- bootstrap_est(travel_incidence_n$dates[range1]-7,data_fr1,test_type=test_type1)
+  out_fr2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_fr2,before_travel_test=btt,after_arrival_test=0,test_type=test_type1)
   
   # Observed prevalence
   # plot_CI(travel_incidence_n$dates[range1],round(pos_counts_fr)[range1], round(tests_fr_s1)[range1])
@@ -544,15 +548,15 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   pos_counts_us[is.na(pos_counts_us)] <- 0
   
   plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="departure prevalence (%)")
-  grid(nx=NULL,ny=NA,col="light gray")
+  grid_year()
   
   # Observed prevalence
   
   data_us1 <- data.frame(pos=round(pos_counts_us)[range1],num=round(tests_us_s1)[range1])
   data_us2 <- data.frame(pos=round(c(pos_counts_us_lab,pos_counts_us[range2])),num=c(tests_us_lab,tests_us_s2[range2]))
   
-  out_us1r <- bootstrap_est(travel_incidence_n$dates[range1]-7,data_us1)
-  out_us2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_us2)
+  out_us1r <- bootstrap_est(travel_incidence_n$dates[range1]-7,data_us1,test_type=test_type1)
+  out_us2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_us2,before_travel_test=btt,after_arrival_test=0,test_type=test_type2)
   
   
   # plot_CI(travel_incidence_n$dates[range2],round(pos_counts_us)[range2], round(tests_us_s2)[range2])
@@ -578,7 +582,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   # France cases plot
   plot(fr_cases$date,1e5*fr_cases_ma/fr_pop,ylab="daily domestic cases (per 100k)",type="l",
        lwd=2,xlim=xlim_v2,ylim=c(0,600),yaxs="i")
-  grid(nx=NULL,ny=NA,col="light gray")
+  grid_year()
 
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
@@ -586,7 +590,7 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   ymax <- 300
   plot(us_cases$date,1e5*us_cases_ma/us_pop,ylab="daily domestic cases (per 100k)",
        type="l",lwd=2,xlim=xlim_v2,ylim=c(0,300),yaxs="i")
-  grid(nx=NULL,ny=NA,col="light gray")
+  grid_year()
   
   par(new=TRUE)
   waste_y <- max(wastewater_nat$effective_concentration_rolling_average)/(max(1e5*us_cases_ma/us_pop,na.rm=T)/ymax)
@@ -623,8 +627,8 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   d4 <- as.Date("2021-01-31"); sero4a <- 15
   
   plot(x_date_p,y_cinc$median,
-       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="cumulative % infected")
-  grid(nx=NULL,ny=NA,col="light gray")
+       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,62),col="white",ylab="cumulative % infected")
+  grid_year()
   points(c(date1,date2),c(sero1,sero2),pch=19)
   lines(c(date1,date1),c(6.9,11)); lines(c(date2,date2),c(10.8,15.6))
   points(c(d3),sero3a,pch=17)
@@ -639,13 +643,13 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
   
   # Plot cases and comparison
   cumsum_fr <- cumsum(coalesce(fr_cases_ma, 0)) + fr_cases_ma*0
-  lines(fr_cases$date,100*cumsum_fr/fr_pop,col="orange")
+  lines(fr_cases$date,100*cumsum_fr/fr_pop,col="grey")
 
   x_text <- min(out_fr1r$pred_date)+20
-  text(x=x_text+5,y=60,labels="  Domestic seroprevalence surveys",col="black",adj=0)
-  text(x=x_text,y=50,labels="- Estimated from FP arrivals",col="blue",adj=0)
-  text(x=x_text,y=50,labels="- Cumulative domestic cases",col="gray",adj=0)
-  points(x=x_text,y=60,pch=19,cex=0.8)
+  text(x=x_text+5,y=50,labels="  Domestic seroprevalence surveys",col="black",adj=0)
+  text(x=x_text,y=40,labels="- Estimated from FP arrivals",col="blue",adj=0)
+  text(x=x_text,y=30,labels="- Cumulative domestic cases",col="dark gray",adj=0)
+  points(x=x_text,y=50,pch=19,cex=0.8)
   
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
@@ -689,8 +693,8 @@ figure_reconstruct_epidemics <- function(test_type="PCR",btt=3){
 
   
   plot(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2]))+sero1,
-       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,70),col="white",ylab="cumulative % infected")
-  grid(nx=NULL,ny=NA,col="light gray")
+       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,62),col="white",ylab="cumulative % infected")
+  grid_year()
 
   # Plot seroprevalence data over time in US (national labs)
   
