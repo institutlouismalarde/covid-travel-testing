@@ -4,7 +4,6 @@
 # - - - - - - - - - - - - - - - - - - - - - - -
 
 # Load libraries
-#library(tidyverse)
 library(dplyr)
 library(magrittr)
 library(readr)
@@ -15,7 +14,6 @@ library(lubridate)
 library(incidence)
 library(gridExtra)
 library(DescTools)
-#library(gratia)
 library(devtools)
 library(MASS)
 library(data.table)
@@ -46,9 +44,9 @@ figure_basic_data()
 # Figure 4
 figure_reconstruct_epidemics()
 
-# Figure S1 - antigen test 1 day before travel (+ 1 day in transit)
+# Figure S2 - antigen test 1 day before travel (+ 1 day in transit)
 figure_reconstruct_epidemics(test_type2="Antigen",btt=2)
 
-# Figure S2
+# Figure S3
 figure_explore_cumulative_incidence()
 
