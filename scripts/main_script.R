@@ -17,7 +17,7 @@ library(MASS)
 library(data.table)
 
 # Load library for highest posterior density interval calculation
-devtools::install_github("rmcelreath/rethinking@slim")
+# devtools::install_github("rmcelreath/rethinking@slim")
 library(rethinking)
 
 # Set working directory

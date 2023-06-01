@@ -728,7 +728,7 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   
   
   
-  dev.copy(pdf,paste("plots/Fig4_estimates_",test_type,"_",btt,".pdf",sep=""),width=6,height=7)
+  dev.copy(pdf,paste("plots/Fig4_estimates_",test_type1,"_",test_type2,"_",btt,".pdf",sep=""),width=6,height=7)
   dev.off()
 
 }
