@@ -100,7 +100,7 @@ figure_schematic_testing <- function(n_depart_N=31,
 
 # Figure 2: Growth phase bias -----------------------------------------------
 
-figure_phase_bias <- function(btt=3,att=4){
+figure_phase_bias <- function(btt=3,att=4,add_gam_in=F){
   
   # btt=3; att=4
   
@@ -235,7 +235,7 @@ figure_phase_bias <- function(btt=3,att=4){
     
     # Simulate and recover dynamics
     stochastic_arrival(prop_incidence1,btt = btt2,att = aat2,n_max,n_travel_vol = 5000,test_type="PCR",
-                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = F,x_weeks,w_s)
+                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = add_gam_in,x_weeks,w_s)
     
     title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
@@ -253,7 +253,7 @@ figure_phase_bias <- function(btt=3,att=4){
   title_label <- c("2d pre + 4d post","2d + 0d","2d + 4d (80% sensitivity)")
   
   for(ii in 1:3){
-    for(kk in 1:3){
+    for(kk in 1:2){
     # Define incidence curves
     prop_incidence1 <- 0.2*dnorm(x_days,mean=50,sd=22) # Proportion infected per day
     
@@ -263,11 +263,10 @@ figure_phase_bias <- function(btt=3,att=4){
       
     if(kk==1){travel_n=1000}
     if(kk==2){travel_n=5000}
-    if(kk==3){travel_n=20000}
     
     # Simulate and recover dynamics
     stochastic_arrival(prop_incidence1,btt = btt2,att = aat2,n_max,n_travel_vol = travel_n,test_type=test_inf,
-                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = F,x_weeks,w_s)
+                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = add_gam_in,x_weeks,w_s)
     text(x=100,y=3.5,adj=0,labels=paste0("n=",travel_n))
     
     title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
@@ -277,7 +276,7 @@ figure_phase_bias <- function(btt=3,att=4){
     }
   }
   
-  dev.copy(pdf,paste("plots/FigS1_phase_bias.pdf",sep=""),width=8,height=5)
+  dev.copy(pdf,paste("plots/FigS1_phase_bias.pdf",sep=""),width=8,height=4)
   dev.off()
   
   
@@ -508,7 +507,7 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   
   # Include shift to get estimate at departure
   out_fr1r <- bootstrap_est(travel_incidence_n$dates[range1]-7,data_fr1,test_type=test_type1)
-  out_fr2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_fr2,before_travel_test=btt,after_arrival_test=0,test_type=test_type1)
+  out_fr2r <- bootstrap_est(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2])-3,data_fr2,before_travel_test=btt,after_arrival_test=0,test_type=test_type2)
   
   # Observed prevalence
   # plot_CI(travel_incidence_n$dates[range1],round(pos_counts_fr)[range1], round(tests_fr_s1)[range1])
@@ -830,7 +829,7 @@ figure_explore_cumulative_incidence <- function(){
   lines(cumsum(inc2),col="red",lwd=2)
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
-  dev.copy(pdf,paste("plots/FigS2_incidence_estimates.pdf",sep=""),width=8,height=6)
+  dev.copy(pdf,paste("plots/FigS3_incidence_estimates.pdf",sep=""),width=8,height=6)
   dev.off()
   
 }

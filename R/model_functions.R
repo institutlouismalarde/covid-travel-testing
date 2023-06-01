@@ -51,9 +51,14 @@ plot_CI_def <- function(dates,data_in,colA="black") {
 
 # Output mid and 95% interval --------------------------------------------------
 
+# c.text<-function(x1,x2,x3,sigF=2){
+#   bp1=signif(c(x1,x2,x3),sigF)
+#   paste(bp1[1],"% (",bp1[2],"-",bp1[3],"%)",sep="")
+# }
+
 c.text<-function(x1,x2,x3,sigF=2){
   bp1=signif(c(x1,x2,x3),sigF)
-  paste(bp1[1],"% (",bp1[2],"-",bp1[3],"%)",sep="")
+  paste(bp1[1],"% (95% CrI: ",bp1[2],", ",bp1[3],"%)",sep="")
 }
 
 
@@ -64,7 +69,7 @@ prev_estimate <- function(data_in,
                           before_travel_test=3, # 
                           after_arrival_test=4,
                           test_type="PCR",
-                          sim_out_n = 1e2 # 
+                          sim_out_n = 1e3 # 
                           ){
   
   # before_travel_test=3; after_arrival_test=4; sim_out_n=100
@@ -587,7 +592,7 @@ stochastic_arrival <- function( n_incidence, # Time series of daily departing in
   
   # XX DEBUG
   # Plot by week
-  plot(x_weeks,100*(e_pos_dep/n_travel_vol)[w_s],type="l",ylab="%",col="white",ylim=c(0,4),yaxs="i",xlab="days",main="")
+  plot(x_weeks,100*(e_pos_dep/n_travel_vol)[w_s],type="l",ylab="%",col="white",ylim=c(0,5),yaxs="i",xlab="days",main="")
 
   data_week <- data.frame(prev_positive_arr,prev_tested_arr); data_week <- data_week[w_s,]
   
