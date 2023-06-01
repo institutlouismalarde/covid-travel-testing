@@ -4,7 +4,10 @@
 # - - - - - - - - - - - - - - - - - - - - - - -
 
 # Load libraries
-library(tidyverse)
+#library(tidyverse)
+library(dplyr)
+library(magrittr)
+library(readr)
 library(zoo)
 library(mgcv)
 library(readxl)
@@ -12,7 +15,8 @@ library(lubridate)
 library(incidence)
 library(gridExtra)
 library(DescTools)
-library(gratia)
+#library(gratia)
+library(devtools)
 library(MASS)
 library(data.table)
 

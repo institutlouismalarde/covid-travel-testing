@@ -235,7 +235,7 @@ figure_phase_bias <- function(btt=3,att=4){
     
     # Simulate and recover dynamics
     stochastic_arrival(prop_incidence1,btt = btt2,att = aat2,n_max,n_travel_vol = 5000,test_type="PCR",
-                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = F)
+                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = F,x_weeks,w_s)
     
     title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
@@ -247,27 +247,27 @@ figure_phase_bias <- function(btt=3,att=4){
   # - - - 
   # Plot Figure S2 with more scenarios:
   
-  par(mfcol=c(3,2),mgp=c(2,0.7,0),mar = c(3,3,1,1))
+  par(mfcol=c(3,3),mgp=c(2,0.7,0),mar = c(3,3,1,1))
   letter_x <- 1
   
-  title_label <- c("2d pre + 4d post","2d + 0d") #,"2d + 4d (antigen)")
+  title_label <- c("2d pre + 4d post","2d + 0d","2d + 4d (80% sensitivity)")
   
-  for(ii in 1:2){
+  for(ii in 1:3){
     for(kk in 1:3){
     # Define incidence curves
     prop_incidence1 <- 0.2*dnorm(x_days,mean=50,sd=22) # Proportion infected per day
     
-    if(ii==1){btt2 <- 3; aat2 <- 4} # Scenario 2
-    if(ii==2 | ii==3){btt2 <- 1; aat2 <-0}; # Scenario 1
-    #if(ii==3){test_inf <- "Antigen"}else{test_inf <- "PCR"}
+    if(ii==1 | 3){btt2 <- 3; aat2 <- 4} # Scenario 2
+    if(ii==2){btt2 <- 1; aat2 <-0}; # Scenario 1
+    if(ii==3){test_inf <- 0.8}else{test_inf <- "PCR"} # Test sensitivity used at arrival/departure
       
     if(kk==1){travel_n=1000}
     if(kk==2){travel_n=5000}
     if(kk==3){travel_n=20000}
     
     # Simulate and recover dynamics
-    stochastic_arrival(prop_incidence1,btt = btt2,att = aat2,n_max,n_travel_vol = travel_n,test_type="PCR",
-                       test_type_infer=test_inf,col_list_in = col_list2[[ii]], add_gam = F)
+    stochastic_arrival(prop_incidence1,btt = btt2,att = aat2,n_max,n_travel_vol = travel_n,test_type=test_inf,
+                       test_type_infer="PCR",col_list_in = col_list2[[ii]], add_gam = F,x_weeks,w_s)
     text(x=100,y=3.5,adj=0,labels=paste0("n=",travel_n))
     
     title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1

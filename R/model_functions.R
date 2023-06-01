@@ -494,12 +494,13 @@ stochastic_arrival <- function( n_incidence, # Time series of daily departing in
                                 test_type="PCR",
                                 test_type_infer="PCR",
                                 col_list_in = col_list2[[2]],
-                                add_gam = F
+                                add_gam = F,
+                                x_weeks,
+                                w_s
                                 ){
                                 
   # DEBUG n_incidence = 0.2*dnorm(x_days,mean=50,sd=22) ; btt=3; att=4; n_max=150; test_type="PCR"; test_type_infer="PCR"
-  
-  
+
   # Set seed for simulations
   set.seed(10)
   
@@ -534,6 +535,11 @@ stochastic_arrival <- function( n_incidence, # Time series of daily departing in
   # Define departure distribution
   if(test_type=="PCR"){
     neg_test <- p_by_day$p_neg # Probability missed at departure given test before
+    neg_depart <- c(rep(1,btt),head(neg_test,-btt)) # Probability missed at departure given test before
+    neg_dist <- neg_depart # Distribution over days since infection in testing
+  }
+  if(test_type!="PCR"){
+    neg_test <- 1-test_type*(1-p_by_day$p_neg) # 80% sensitivity
     neg_depart <- c(rep(1,btt),head(neg_test,-btt)) # Probability missed at departure given test before
     neg_dist <- neg_depart # Distribution over days since infection in testing
   }
