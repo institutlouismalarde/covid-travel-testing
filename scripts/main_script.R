@@ -44,6 +44,9 @@ figure_basic_data()
 # Figure 4
 figure_reconstruct_epidemics()
 
+# Figure 5
+figure_pool_test()
+
 # Figure S2 - antigen test 1 day before travel (+ 1 day in transit)
 figure_reconstruct_epidemics(test_type2="Antigen",btt=2)
 

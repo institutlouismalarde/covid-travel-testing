@@ -592,7 +592,7 @@ stochastic_arrival <- function( n_incidence, # Time series of daily departing in
   
   # XX DEBUG
   # Plot by week
-  plot(x_weeks,100*(e_pos_dep/n_travel_vol)[w_s],type="l",ylab="%",col="white",ylim=c(0,5),yaxs="i",xlab="days",main="")
+  plot(x_weeks,100*(e_pos_dep/n_travel_vol)[w_s],type="l",ylab="%",col="white",ylim=c(0,5),xaxs="i",yaxs="i",xlab="days",main="")
 
   data_week <- data.frame(prev_positive_arr,prev_tested_arr); data_week <- data_week[w_s,]
   

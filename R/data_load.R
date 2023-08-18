@@ -32,8 +32,9 @@ us_national_sero <- read_csv("data/us_antibody_data.csv") |>
 
 # Load wastewater data ----------------------------------------------------
 
-wastewater_nat <- fread("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv")
-
+# Archived from: https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv
+#wastewater_nat <- fread("https://raw.githubusercontent.com/biobotanalytics/covid19-wastewater-data/master/wastewater_by_region.csv")
+wastewater_nat <- read_csv("data/biobot_wastewater_by_region.csv")
 
 
 # Load tourism data -------------------------------------------------------

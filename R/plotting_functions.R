@@ -71,19 +71,19 @@ figure_schematic_testing <- function(n_depart_N=31,
   
   # Plot incidence
   ymax <- 3.5
-  plot(100*out1$in_incidence,type="l",ylab="%",col="white",ylim=c(0,0.4),yaxs="i",xlab="days",main="Incidence")
+  plot(100*out1$in_incidence,type="l",ylab="%",col="white",ylim=c(0,0.4),xaxs="i",yaxs="i",xlab="days",main="Incidence")
   grid(nx=NULL,ny=NA,col="light gray")
   lines(100*out1$in_incidence,col="dark orange",lwd=2)
   lines(100*out2$in_incidence,col="dark blue",lwd=2)
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
 
-  plot(100*out1$out_pos_depart,type="l",ylab="%",ylim=c(0,ymax),yaxs="i",col="white",xlab="days",main="Departure prevalence")
+  plot(100*out1$out_pos_depart,type="l",ylab="%",ylim=c(0,ymax),xaxs="i",yaxs="i",col="white",xlab="days",main="Departure prevalence")
   grid(nx=NULL,ny=NA,col="light gray")
   lines(100*out1$out_pos_depart,col="dark orange",lwd=2)
   lines(100*out2$out_pos_depart,col="dark blue",lwd=2)
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
-  plot(100*out1$out_pos_arrive,type="l",ylab="%",ylim=c(0,ymax),col="white",yaxs="i",xlab="days",main="Arrival prevalence")
+  plot(100*out1$out_pos_arrive,type="l",ylab="%",ylim=c(0,ymax),col="white",xaxs="i",yaxs="i",xlab="days",main="Arrival prevalence")
   grid(nx=NULL,ny=NA,col="light gray")
   lines(100*out1_4$out_pos_arrive+100*out2_4$out_pos_arrive,col="grey",lwd=2)
   lines(100*out1_4$out_pos_arrive,col="orange",lwd=2)
@@ -300,7 +300,7 @@ figure_basic_data <- function() {
   # - - -
   # Testing data
   plot(travel_incidence_n$dates,rowSums(travel_incidence_n[,c("NON","OUI")]),
-       xlim=xlim_v,ylim=c(0,7000),yaxs="i",col="white",xlab="2020/21",ylab="weekly tests",type="l",lwd=2)
+       xlim=xlim_v,ylim=c(0,7000),xaxs="i",yaxs="i",col="white",xlab="2020/21",ylab="weekly tests",type="l",lwd=2)
   
   grid_year()
 
@@ -314,7 +314,7 @@ figure_basic_data <- function() {
   
   par(new=TRUE)
   plot(travel_incidence_n$dates,travel_incidence_n$OUI,col="dark orange",xaxt="n",
-       yaxt="n",ylab="",ylim=c(0,250),type="l",lwd=2,xlim=xlim_v,yaxs="i")
+       yaxt="n",ylab="",ylim=c(0,250),type="l",lwd=2,xlim=xlim_v,xaxs="i",yaxs="i")
   
   axis(4,col="dark orange",col.axis="dark orange")
   mtext("positive tests", side=4, line=1.5,col="dark orange",cex=0.7) # Label for 2nd axis
@@ -323,7 +323,7 @@ figure_basic_data <- function() {
   # - - -
   # Plot positives
   plot(ymd(travel_incidence_n$dates),100*travel_incidence_n$OUI/rowSums(travel_incidence_n[,c("OUI","NON")]),
-       xlim=ymd(xlim_v),ylim=c(0,5),col="white",yaxs="i",xlab="2020/21",ylab="% positive")
+       xlim=ymd(xlim_v),ylim=c(0,5),col="white",xaxs="i",yaxs="i",xlab="2020/21",ylab="% positive")
   grid_year()
   
   plot_CI(travel_incidence_n$dates,travel_incidence_n$OUI,rowSums(travel_incidence_n[,c("NON","OUI")]))
@@ -338,7 +338,7 @@ figure_basic_data <- function() {
   
   # - - -
   # Case data
-  plot(fp_cases$date,fp_cases$new_cases,col="white",yaxs="i",type="l",ylim=c(0,8000),ylab="weekly cases in FP", xlim=xlim_v,lwd=2)
+  plot(fp_cases$date,fp_cases$new_cases,col="white",xaxs="i",yaxs="i",type="l",ylim=c(0,8000),ylab="weekly cases in FP", xlim=xlim_v,lwd=2)
   grid_year()
   lines(fp_cases$date,fp_cases$new_cases,lwd=2)
   
@@ -361,7 +361,7 @@ figure_basic_data <- function() {
   hcw_ct_p <- hcw_ct %>% filter(ct < 37 & x_date>=0) # Select Ct positives
   
   hist(travel_test_ct$ct_value,breaks=break_x,ylab="probability",prob=T,ylim=c(0,0.08),
-       xlab="Ct value",main="",col=NULL,yaxs="i",lwd=2,border="orange") # rgb(0,0.8,1,0.6)
+       xlab="Ct value",main="",col=NULL,xaxs="i",yaxs="i",lwd=2,border="orange") # rgb(0,0.8,1,0.6)
   
   hist(hcw_ct_p$ct,breaks=break_x,add=T,prob=T,col=NULL,border="dark cyan",lwd=2) # rgb(1,0.5,0,0.5)
   
@@ -482,14 +482,14 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   
   # France arrivals plot
   plot(travel_incidence_n$dates[range1],tests_fr_s1[range1],main="France",
-       col="dark orange",ylab="FP arrivals tested weekly",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,yaxs="i")
+       col="dark orange",ylab="FP arrivals tested weekly",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,xaxs="i",yaxs="i")
   lines(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),c(tests_fr_lab,tests_fr_s2[range2]),col="gold",lwd=2)
 
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # US arrivals plot
   plot(travel_incidence_n$dates[range1],tests_us_s1[range1],main="USA",
-       col="dark orange",ylab="FP arrivals tested weekly",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,yaxs="i")
+       col="dark orange",ylab="FP arrivals tested weekly",ylim=c(0,4000),type="l",lwd=2,xlim=xlim_v2,xaxs="i",yaxs="i")
   lines(c(travel_incidence_n$dates[range_lab],travel_incidence_n$dates[range2]),c(tests_us_lab,tests_us_s2[range2]),col="gold",lwd=2)
 
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
@@ -499,7 +499,7 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   pos_counts_fr[is.na(pos_counts_fr)] <- 0
   pos_counts_fr[is.na(pos_counts_fr)] <- 0
   
-  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="departure prevalence (%)")
+  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),xaxs="i",yaxs="i",ylab="departure prevalence (%)")
   grid_year()
   
   data_fr1 <- data.frame(pos=round(pos_counts_fr)[range1],num=round(tests_fr_s1)[range1])
@@ -546,7 +546,7 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   pos_counts_us[is.na(pos_counts_us)] <- 0
   pos_counts_us[is.na(pos_counts_us)] <- 0
   
-  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),yaxs="i",ylab="departure prevalence (%)")
+  plot(travel_incidence_n$dates,round(pos_counts_fr),col="white",ylim=c(0,8),xaxs="i",yaxs="i",ylab="departure prevalence (%)")
   grid_year()
   
   # Observed prevalence
@@ -580,7 +580,7 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   
   # France cases plot
   plot(fr_cases$date,1e5*fr_cases_ma/fr_pop,ylab="daily domestic cases (per 100k)",type="l",
-       lwd=2,xlim=xlim_v2,ylim=c(0,600),yaxs="i")
+       lwd=2,xlim=xlim_v2,ylim=c(0,600),xaxs="i",yaxs="i")
   grid_year()
 
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
@@ -588,14 +588,14 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   # US cases plot
   ymax <- 300
   plot(us_cases$date,1e5*us_cases_ma/us_pop,ylab="daily domestic cases (per 100k)",
-       type="l",lwd=2,xlim=xlim_v2,ylim=c(0,300),yaxs="i")
+       type="l",lwd=2,xlim=xlim_v2,ylim=c(0,300),xaxs="i",yaxs="i")
   grid_year()
   
   par(new=TRUE)
   waste_y <- max(wastewater_nat$effective_concentration_rolling_average)/(max(1e5*us_cases_ma/us_pop,na.rm=T)/ymax)
   
   plot(wastewater_nat$sampling_week,wastewater_nat$effective_concentration_rolling_average,col="dark orange",xaxt="n",
-       yaxt="n",ylab="",ylim=c(0,waste_y),type="l",lwd=2,xlim=xlim_v,yaxs="i")
+       yaxt="n",ylab="",ylim=c(0,waste_y),type="l",lwd=2,xlim=xlim_v,xaxs="i",yaxs="i")
   
   axis(4,col="dark orange",col.axis="dark orange")
   mtext("SARS-CoV-2 concentration", side=4, line=1.5,col="dark orange",cex=0.7) # Label for 2nd axis
@@ -626,7 +626,7 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
   d4 <- as.Date("2021-01-31"); sero4a <- 15
   
   plot(x_date_p,y_cinc$median,
-       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,62),col="white",ylab="cumulative % infected")
+       xlim=xlim_v2,type="l",xaxs="i",yaxs="i",ylim=c(0,62),col="white",ylab="cumulative % infected")
   grid_year()
   points(c(date1,date2),c(sero1,sero2),pch=19)
   lines(c(date1,date1),c(6.9,11)); lines(c(date2,date2),c(10.8,15.6))
@@ -692,7 +692,7 @@ figure_reconstruct_epidemics <- function(test_type1="PCR",test_type2="PCR",btt=3
 
   
   plot(x_date_p[d1:d2],(y_cinc$median[d1:d2]-min(y_cinc$median[d1:d2]))+sero1,
-       xlim=xlim_v2,type="l",yaxs="i",ylim=c(0,62),col="white",ylab="cumulative % infected")
+       xlim=xlim_v2,type="l",xaxs="i",yaxs="i",ylim=c(0,62),col="white",ylab="cumulative % infected")
   grid_year()
 
   # Plot seroprevalence data over time in US (national labs)
@@ -804,17 +804,17 @@ figure_explore_cumulative_incidence <- function(){
   par(mfrow=c(2,2),mgp=c(2,0.7,0),mar = c(3,3,1,1))
   
   # Incidence
-  plot(data_infections,yaxs="i",ylab="daily incidence (%)",ylim=c(0,0.35),xlab="days")
+  plot(data_infections,xaxs="i",yaxs="i",ylab="daily incidence (%)",ylim=c(0,0.35),xlab="days")
   
   letter_x <- 1
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # Prevalence
-  plot(data_prev,type="l",lwd=2,yaxs="i",ylab="daily prevalence (%)",ylim=c(0,3),xlab="days")
+  plot(data_prev,type="l",lwd=2,xaxs="i",yaxs="i",ylab="daily prevalence (%)",ylim=c(0,3),xlab="days")
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # Reconstruction of incidence
-  plot(data_infections,yaxs="i",ylab="daily incidence (%)",ylim=c(0,0.35),xlab="days")
+  plot(data_infections,xaxs="i",yaxs="i",ylab="daily incidence (%)",ylim=c(0,0.35),xlab="days")
   
   inc1 <- estimate_incidence(data_prev)
   inc2 <- prev_to_inc(data_prev,weekly_adjust=1) %>% tail(.,-9)
@@ -823,13 +823,121 @@ figure_explore_cumulative_incidence <- function(){
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   # Reconstruction of cumulative incidence
-  plot(cumsum(data_infections),yaxs="i",ylab="cumulative incidence (%)",ylim=c(0,50),xlab="days")
+  plot(cumsum(data_infections),xaxs="i",yaxs="i",ylab="cumulative incidence (%)",ylim=c(0,50),xlab="days")
   
   lines(cumsum(inc1),col="blue",lwd=2)
   lines(cumsum(inc2),col="red",lwd=2)
   title(main=LETTERS[letter_x],adj=0);letter_x <- letter_x+1
   
   dev.copy(pdf,paste("plots/FigS3_incidence_estimates.pdf",sep=""),width=8,height=6)
+  dev.off()
+  
+}
+
+
+#  Plot pooled testing scenarios ------------------------------------------
+
+figure_pool_test <- function(){
+  
+  # Set up example numbers
+  n_plane <- 2 # Number of planes
+  t_passengers <- 200 # Passengers tested per plane
+  pool_n_plane <- 10 # Pools per plane
+  pool_daily <- pool_n_plane*n_plane # Pools per day
+  
+  pool_size <- t_passengers/pool_n_plane # Pool size
+  
+  
+  # Plot data and CI
+  plot_CI <- function(xx,med,CI1,CI2,colA="black") {
+    
+    for(ii in 1:length(med)){
+      points(xx[ii],med[ii],col=colA,pch=19); lines(c(xx[ii],xx[ii]),c(CI1[ii],CI2[ii]),col=colA)
+    }
+    
+  }
+  
+  # Calculate MLE and profile likelihood
+  calculate_MLE <- function(x_pool, # Positive pools
+                            n_pool, # Total pools
+                            size # Size of a pool
+  ){
+    
+    # DEBUG: x_pool = 20; n_pool = pool_daily; size = pool_size
+    
+    xx <- seq(0,1,0.0001)
+    
+    # Probability at least one positive in pool
+    p_pool <- 1-(1-xx)^size
+    
+    # Binomial likelihood
+    b_lik <- dbinom(x_pool,n_pool,prob = p_pool,log=T)
+    
+    mle_x <- max(100*xx[which(b_lik==max(b_lik))])
+    ci1_x <- 100*xx[which(b_lik>(max(b_lik)-1.92))] %>% min()
+    ci2_x <- 100*xx[which(b_lik>(max(b_lik)-1.92))] %>% max()
+    
+    c_vec <- c(mle_x,ci1_x,ci2_x)
+    c_vec
+    #ci_text <- paste0(mle_x,"% (",ci1_x,"-",ci2_x,"%)")
+    
+  }
+  
+  
+  
+  # Plot estimates
+  
+  par(mfcol=c(2,2),mar=c(3,3,1,1),las=0,mgp=c(2,0.7,0))
+  passenger_list <- c(100,500,100,500)
+  pool_list <- c(5,20)
+  
+  col_list <- c("orange","blue","purple")
+  
+  for(kk in 1:4){
+    
+    t_passengers <- passenger_list[kk] # Passengers tested
+    
+    for(jj in 1:2){
+      
+      pool_size <- pool_list[jj] # Pool size
+      pool_daily <- t_passengers/pool_size # Pools tested
+      total_screened <- pool_daily*pool_size # Total screened
+      
+      pool_positives <- c(0:ceiling(1*pool_daily))
+      
+      pool_positives_est <- sapply(pool_positives,function(x){calculate_MLE(x,pool_daily,pool_size)})
+      pool_out <- data.frame(positive_pools=pool_positives,estimated_prevalence=t(pool_positives_est))
+      
+      if(kk==1 | kk==2){xmax=100;ymax=100;headerK=paste0(total_screened," passengers")}
+      if(kk==3 | kk==4){xmax=40;ymax=20;headerK=""}
+      
+      if(jj==1){
+        plot(100*pool_out$positive_pools/pool_daily,pool_out$estimated_prevalence.1,
+             ylab="estimated prevalence (%)",
+             xlab="% pools positive",
+             col="white",ylim=c(0,ymax),xlim=c(0,xmax),
+             main=headerK)
+      }
+      if(kk==1 | kk==2){
+        polygon(c(0,40,40,0),c(0,0,20,20),border="light gray")
+        text(x=0,y=80,labels="Pool size:",adj=0)
+        text(x=5,y=80-10*jj,labels=pool_size,adj=0,col=col_list[[jj]])
+        text(x=0,y=25,labels=LETTERS[kk+2],adj=0,col="gray",cex=0.7)
+      }
+      
+      
+      title(main=LETTERS[kk],adj=0)
+      plot_CI(100*pool_out$positive_pools/pool_daily,pool_out$estimated_prevalence.1,
+              pool_out$estimated_prevalence.2,pool_out$estimated_prevalence.3,col=col_list[[jj]])
+      
+      
+    }
+    
+    lines(c(0,100),c(0,100),lty=2)
+    
+  }
+  
+  dev.copy(pdf,paste("plots/Fig5.pdf",sep=""),width=8,height=6)
   dev.off()
   
 }
