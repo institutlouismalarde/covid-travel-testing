@@ -24,6 +24,6 @@ The main script to reproduce the analysis is in `scripts/main_script.r`. This ca
 
 ### Citation
 
-[Adam J Kucharski, Kiyojiken Chung, Maite Aubry, Iotefa Teiti, Anita Teissier, Vaea Richard, Timothy W Russell, Raphaëlle Bos, Sophie Olivier, Van-Mai Cao-Lormeau. Real-time surveillance of international SARS-CoV-2 prevalence using systematic traveller arrival screening, 2022](https://www.medrxiv.org/content/10.1101/2022.10.12.22280928v1)
+[Adam J Kucharski, Kiyojiken Chung, Maite Aubry, Iotefa Teiti, Anita Teissier, Vaea Richard, Timothy W Russell, Raphaëlle Bos, Sophie Olivier, Van-Mai Cao-Lormeau. Real-time surveillance of international SARS-CoV-2 prevalence using systematic traveller arrival screening: An observational study. PLOS Medicine, 2023]([https://www.medrxiv.org/content/10.1101/2022.10.12.22280928v1](https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.1004283))
 
 The paper above also uses epidemiolgical and population data from additional sources for context (details in manuscript and in `R/data_load.R` file on this repository). Please ensure you cite all relevant data sources if subsequently building on our analysis.
